@@ -58,13 +58,13 @@ Disagree with a rule? [Open an issue](https://github.com/arndvs/system-design-la
 ```bash
 git clone https://github.com/arndvs/system-design-lab
 cd system-design-lab
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ```bash
-npm test          # rules, estimator math and content checks
-npm run build     # typecheck and build the static site into dist/
+pnpm test         # rules, estimator math and content checks
+pnpm build        # typecheck and build the static site into dist/
 ```
 
 ## How it's built

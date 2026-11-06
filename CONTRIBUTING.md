@@ -26,6 +26,6 @@ Rules decide what the app teaches, so each change needs a test that would have f
 ## Before you open a PR
 
 ```bash
-npm test          # rules, estimator math, and content completeness
-npm run build     # typecheck and production build
+pnpm test         # rules, estimator math, and content completeness
+pnpm build        # typecheck and production build
 ```
