@@ -20,6 +20,9 @@ export const defaultRequirements: Requirements = {
   reporting: false,
   microservices: false,
   serviceCount: 8,
+  independentTeams: 1,
+  unevenScaling: false,
+  opsMaturity: "limited",
 
   peakRps: 100,
   readWriteRatio: 5,

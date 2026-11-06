@@ -60,6 +60,12 @@ export type Requirements = {
   microservices: boolean;
   /** Only meaningful when `microservices` is true. */
   serviceCount: number;
+  /** Teams that deploy on their own schedule. Decides application shape. */
+  independentTeams: number;
+  /** Some parts of the product need far more capacity than others. */
+  unevenScaling: boolean;
+  /** Whether the team can run separately deployed services: monitoring, on-call, deploys. */
+  opsMaturity: "limited" | "solid";
 
   // Non-functional: how well
   /** Expected peak requests per second. */

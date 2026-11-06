@@ -12,6 +12,9 @@ const KEYS: Record<keyof Requirements, string> = {
   reporting: "reports",
   microservices: "micro",
   serviceCount: "services",
+  independentTeams: "teams",
+  unevenScaling: "scaling",
+  opsMaturity: "ops",
   peakRps: "rps",
   readWriteRatio: "rw",
   availability: "avail",
@@ -24,6 +27,7 @@ const KEYS: Record<keyof Requirements, string> = {
 const ENUMS: Partial<Record<keyof Requirements, readonly (string | number)[]>> = {
   dataShape: ["relational", "key-value", "document", "graph"],
   consistency: ["eventual", "mixed", "strong"],
+  opsMaturity: ["limited", "solid"],
   availability: AVAILABILITY_TARGETS,
 };
 
