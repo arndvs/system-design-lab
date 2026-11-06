@@ -10,7 +10,7 @@ export type Scenario = {
   nonFunctional: string[];
   requirements: Requirements;
   /** The reference answer. Tests check that the engine produces exactly this. */
-  expected: { components: string[]; topology: Topology; tensions: string[] };
+  expected: { components: string[]; shape: "modular-monolith" | "microservices"; topology: Topology; tensions: string[] };
   walkthrough: string[];
 };
 
@@ -37,6 +37,7 @@ export const scenarios: Scenario[] = [
     }),
     expected: {
       components: ["load-balancer", "app-servers", "cache", "key-value-store", "metrics-monitoring", "centralized-logging"],
+      shape: "modular-monolith",
       topology: "multi-zone",
       tensions: [],
     },
@@ -79,6 +80,7 @@ export const scenarios: Scenario[] = [
         "metrics-monitoring",
         "centralized-logging",
       ],
+      shape: "modular-monolith",
       topology: "multi-zone",
       tensions: [],
     },
@@ -129,6 +131,7 @@ export const scenarios: Scenario[] = [
         "metrics-monitoring",
         "centralized-logging",
       ],
+      shape: "modular-monolith",
       topology: "single-zone",
       tensions: [],
     },
@@ -188,6 +191,7 @@ export const scenarios: Scenario[] = [
         "metrics-monitoring",
         "centralized-logging",
       ],
+      shape: "modular-monolith",
       topology: "multi-region",
       tensions: ["consistency-vs-availability", "latency-vs-consistency"],
     },
@@ -196,6 +200,49 @@ export const scenarios: Scenario[] = [
       "Worldwide users at 99.99% call for several regions, but exact stock must be decided in one place, which is the tension to discuss.",
       "A common answer: give stock a home region and route purchases there, while catalog pages, search and photos are served locally from replicas, the cache and the CDN.",
       "Reports run in a warehouse fed nightly, so they never slow down shoppers.",
+    ],
+  },
+  {
+    id: "small-team-booking",
+    title: "Booking app for a small team",
+    brief:
+      "Two engineers run a booking app for a group of dental clinics. Patients sign in to book and move appointments. Traffic is quiet most weeks and busy around flu season, and nobody on the team runs an on-call rotation.",
+    functional: ["Patients sign in.", "Book and reschedule appointments."],
+    nonFunctional: [
+      "Available 99.9% of the time.",
+      "Pages respond within 300 ms at the 99th percentile.",
+      "About 200 requests per second at peak, about 4 reads per write.",
+    ],
+    requirements: req({
+      dataShape: "relational",
+      userAccounts: true,
+      peakRps: 200,
+      readWriteRatio: 4,
+      availability: 99.9,
+      latencyMs: 300,
+      consistency: "eventual",
+      independentTeams: 2,
+      opsMaturity: "limited",
+    }),
+    expected: {
+      components: [
+        "app-servers",
+        "auth-service",
+        "centralized-logging",
+        "load-balancer",
+        "metrics-monitoring",
+        "rate-limiter",
+        "relational-database",
+      ],
+      shape: "modular-monolith",
+      topology: "single-zone",
+      tensions: [],
+    },
+    walkthrough: [
+      "Patients, clinics and appointments reference each other, so a relational database fits.",
+      "Two engineers and no on-call rotation mean one deployable: a modular monolith, with module boundaries kept for a later split.",
+      "At 99.9%, two servers behind a load balancer keep the booking page up through a single server failure.",
+      "Sign-in and its rate limit are the only extra components. Nothing is cached: at 4 reads per write and a 300 ms target, the database keeps up.",
     ],
   },
 ];

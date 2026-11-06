@@ -183,6 +183,7 @@ describe("scenarios", () => {
         expect(Object.keys(rec.components).sort()).toEqual([...s.expected.components].sort());
       });
       it("produces the reference topology", () => expect(rec.topology.level).toBe(s.expected.topology));
+      it("produces the reference shape", () => expect(rec.shape.level).toBe(s.expected.shape));
       it("raises the reference tensions", () => {
         expect(rec.tensions.map((t) => t.id).sort()).toEqual([...s.expected.tensions].sort());
       });
