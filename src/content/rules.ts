@@ -48,6 +48,7 @@ export const rules: Rule[] = [
   // ---- Functional: what the system does ----------------------------------
   {
     id: "shape-relational",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "relational",
     add: ["relational-database"],
@@ -58,6 +59,7 @@ export const rules: Rule[] = [
   },
   {
     id: "shape-key-value",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "key-value",
     add: ["key-value-store"],
@@ -68,6 +70,7 @@ export const rules: Rule[] = [
   },
   {
     id: "shape-document",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "document",
     add: ["document-database"],
@@ -78,6 +81,7 @@ export const rules: Rule[] = [
   },
   {
     id: "shape-graph",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "graph",
     add: ["graph-database"],
@@ -88,6 +92,7 @@ export const rules: Rule[] = [
   },
   {
     id: "user-accounts",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.userAccounts,
     add: ["auth-service", "rate-limiter"],
@@ -99,6 +104,7 @@ export const rules: Rule[] = [
   },
   {
     id: "media-uploads",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.mediaUploads,
     add: ["object-storage", "cdn"],
@@ -109,6 +115,7 @@ export const rules: Rule[] = [
   },
   {
     id: "full-text-search",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.fullTextSearch,
     add: ["search-index"],
@@ -120,6 +127,7 @@ export const rules: Rule[] = [
   },
   {
     id: "async-work",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.asyncWork,
     add: ["message-queue"],
@@ -131,6 +139,7 @@ export const rules: Rule[] = [
   },
   {
     id: "realtime-analytics",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.realtimeAnalytics,
     add: ["message-queue", "stream-processing"],
@@ -142,6 +151,7 @@ export const rules: Rule[] = [
   },
   {
     id: "reporting",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.reporting,
     add: ["etl-pipeline", "data-warehouse"],
@@ -152,6 +162,7 @@ export const rules: Rule[] = [
   },
   {
     id: "microservices",
+    basis: "definition",
     driver: "functional",
     when: (r) => shape(r).level === "microservices",
     add: ["api-gateway", "distributed-tracing"],
@@ -163,6 +174,7 @@ export const rules: Rule[] = [
   },
   {
     id: "many-services",
+    basis: "rule-of-thumb",
     driver: "functional",
     when: (r) => shape(r).level === "microservices" && r.serviceCount >= DISCOVERY_SERVICE_COUNT,
     add: ["service-discovery"],
@@ -174,6 +186,7 @@ export const rules: Rule[] = [
   },
   {
     id: "very-many-services",
+    basis: "rule-of-thumb",
     driver: "functional",
     when: (r) => shape(r).level === "microservices" && r.serviceCount >= MESH_SERVICE_COUNT,
     add: ["service-mesh"],
@@ -187,6 +200,7 @@ export const rules: Rule[] = [
   // ---- Non-functional: how well it must do it ----------------------------
   {
     id: "consistency-strong",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.consistency === "strong",
     add: (r) => [primaryStore(r)],
@@ -201,6 +215,7 @@ export const rules: Rule[] = [
   },
   {
     id: "consistency-mixed",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.consistency === "mixed",
     add: (r) => [primaryStore(r)],
@@ -212,6 +227,7 @@ export const rules: Rule[] = [
   },
   {
     id: "availability-redundancy",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.availability >= 99.9,
     add: ["load-balancer"],
@@ -224,6 +240,7 @@ export const rules: Rule[] = [
   },
   {
     id: "availability-standby",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.availability >= 99.99 && r.dataShape !== "key-value",
     add: ["database-replicas"],
@@ -236,6 +253,7 @@ export const rules: Rule[] = [
   },
   {
     id: "scale-out",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.peakRps > MULTI_SERVER_RPS,
     add: ["load-balancer"],
@@ -248,6 +266,7 @@ export const rules: Rule[] = [
   },
   {
     id: "read-heavy-cache",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.readWriteRatio >= READ_HEAVY_RATIO,
     add: ["cache"],
@@ -259,6 +278,7 @@ export const rules: Rule[] = [
   },
   {
     id: "read-heavy-replicas",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) =>
       r.readWriteRatio >= READ_HEAVY_RATIO && r.dataShape !== "key-value",
@@ -270,6 +290,7 @@ export const rules: Rule[] = [
   },
   {
     id: "tight-latency",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.latencyMs <= TIGHT_LATENCY_MS,
     add: ["cache"],
@@ -280,6 +301,7 @@ export const rules: Rule[] = [
   },
   {
     id: "global-users",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.globalUsers,
     add: ["cdn"],
@@ -290,6 +312,7 @@ export const rules: Rule[] = [
   },
   {
     id: "sensitive-data",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.sensitiveData,
     add: ["auth-service"],
@@ -300,6 +323,7 @@ export const rules: Rule[] = [
   },
   {
     id: "write-spikes",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) =>
       r.peakRps > MULTI_SERVER_RPS && r.readWriteRatio <= WRITE_HEAVY_RATIO,

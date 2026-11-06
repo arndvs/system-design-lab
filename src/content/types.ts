@@ -82,10 +82,14 @@ export type Requirements = {
 /** Which side of the requirements pulled something in. */
 export type Driver = "functional" | "non-functional" | "baseline";
 
-export type Reason = { text: string; driver: Driver };
+/** "rule-of-thumb" when a threshold decides the rule: the number is a judgment, not a sourced fact. */
+export type Basis = "definition" | "rule-of-thumb";
+
+export type Reason = { text: string; driver: Driver; basis: Basis };
 
 export type Rule = {
   id: string;
+  basis: Basis;
   driver: Driver;
   when: (r: Requirements) => boolean;
   add: string[] | ((r: Requirements) => string[]);

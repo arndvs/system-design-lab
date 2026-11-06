@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { downtimeLabel } from "../src/content/availability";
-import { BASELINE } from "../src/content/rules";
+import { BASELINE, rules } from "../src/content/rules";
 import { scenarios } from "../src/content/scenarios";
 import type { Requirements } from "../src/content/types";
 import { evolve } from "../src/engine/evolve";
@@ -216,6 +216,32 @@ describe("application shape", () => {
 
   it("includes the shape in the recommendation", () => {
     expect(recommend(req({ opsMaturity: "solid", independentTeams: 3 })).shape.level).toBe("microservices");
+  });
+});
+
+describe("basis", () => {
+  it("labels every rule as a definition or a rule of thumb", () => {
+    for (const rule of rules) expect(["definition", "rule-of-thumb"], rule.id).toContain(rule.basis);
+  });
+
+  it("marks exactly the threshold-driven rules as rules of thumb", () => {
+    const thumb = rules.filter((rule) => rule.basis === "rule-of-thumb").map((rule) => rule.id).sort();
+    expect(thumb).toEqual([
+      "availability-redundancy",
+      "availability-standby",
+      "many-services",
+      "read-heavy-cache",
+      "read-heavy-replicas",
+      "scale-out",
+      "tight-latency",
+      "very-many-services",
+      "write-spikes",
+    ]);
+  });
+
+  it("carries the basis into each reason", () => {
+    const reasons = recommend(req({ readWriteRatio: 50 })).components["cache"]!;
+    expect(reasons.some((reason) => reason.basis === "rule-of-thumb")).toBe(true);
   });
 });
 

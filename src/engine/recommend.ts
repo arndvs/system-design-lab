@@ -42,10 +42,10 @@ export function recommend(r: Requirements): Recommendation {
     if (!reasons.some((x) => x.text === reason.text)) reasons.push(reason);
   };
 
-  for (const { id, reason } of BASELINE) add(id, { text: reason, driver: "baseline" });
+  for (const { id, reason } of BASELINE) add(id, { text: reason, driver: "baseline", basis: "definition" });
   for (const rule of rules) {
     if (!rule.when(r)) continue;
-    const reason: Reason = { text: resolveReason(rule, r), driver: rule.driver };
+    const reason: Reason = { text: resolveReason(rule, r), driver: rule.driver, basis: rule.basis };
     for (const id of resolveAdd(rule, r)) add(id, reason);
   }
 
