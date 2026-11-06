@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* Design tokens. Dark-first; every color the UI uses comes from here. */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-page: var(--color-zinc-950);
+  --color-panel: var(--color-zinc-900);
+  --color-raised: color-mix(in oklab, var(--color-zinc-800) 60%, transparent);
+  --color-line: var(--color-zinc-800);
+  --color-ink: var(--color-zinc-100);
+  --color-muted: var(--color-zinc-400);
+  --color-faint: var(--color-zinc-600);
+  --color-accent: var(--color-sky-400);
+
+  --color-layer-edge: var(--color-cyan-400);
+  --color-layer-entry: var(--color-sky-400);
+  --color-layer-compute: var(--color-indigo-400);
+  --color-layer-data: var(--color-emerald-400);
+  --color-layer-async: var(--color-amber-400);
+  --color-layer-analytics: var(--color-violet-400);
+  --color-layer-ops: var(--color-rose-400);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-page text-ink font-sans antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
