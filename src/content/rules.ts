@@ -14,8 +14,6 @@ export const TIGHT_LATENCY_MS = 50;
 /** Service counts at which shared discovery and then a mesh start to pay off. */
 export const DISCOVERY_SERVICE_COUNT = 10;
 export const MESH_SERVICE_COUNT = 25;
-/** Below this many services, microservices usually cost more than they return. */
-export const FEW_SERVICES = 5;
 
 const primaryStore = (r: Requirements): string =>
   ({

@@ -146,10 +146,12 @@ describe("tensions", () => {
     expect(tensionIds(req({ availability: 99.999 }))).toContain("five-nines-cost");
   });
 
-  it("questions microservices with very few services", () => {
-    const micro = { opsMaturity: "solid" as const, independentTeams: 3 };
-    expect(tensionIds(req({ ...micro, serviceCount: 2 }))).toContain("too-few-services");
-    expect(tensionIds(req({ ...micro, serviceCount: 8 }))).not.toContain("too-few-services");
+  it("flags a microservices split that rests only on the team threshold", () => {
+    const solid = { opsMaturity: "solid" as const };
+    expect(tensionIds(req({ ...solid, independentTeams: 3 }))).toContain("marginal-microservices");
+    expect(tensionIds(req({ ...solid, independentTeams: 4 }))).not.toContain("marginal-microservices");
+    expect(tensionIds(req({ ...solid, independentTeams: 3, unevenScaling: true }))).not.toContain("marginal-microservices");
+    expect(tensionIds(req({ independentTeams: 3 }))).not.toContain("marginal-microservices");
   });
 
   it("finds no tensions in the default design", () => {

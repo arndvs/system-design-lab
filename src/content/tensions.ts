@@ -1,6 +1,6 @@
 import { downtimeLabel } from "./availability";
-import { FEW_SERVICES, needsCache, TIGHT_LATENCY_MS } from "./rules";
-import { shape } from "./shape";
+import { needsCache, TIGHT_LATENCY_MS } from "./rules";
+import { shape, SPLIT_TEAM_COUNT } from "./shape";
 import type { Tension } from "./types";
 
 /** Combinations of requirements that pull against each other. */
@@ -68,14 +68,13 @@ export const tensions: Tension[] = [
     concepts: ["token-bucket"],
   },
   {
-    id: "too-few-services",
-    when: (r) => shape(r).level === "microservices" && r.serviceCount < FEW_SERVICES,
-    title: "Microservices with very few services",
-    explain: (r) =>
-      `With ${r.serviceCount} service${r.serviceCount === 1 ? "" : "s"}, you take on network calls, partial failures and harder debugging, without the benefit of many teams deploying independently.`,
+    id: "marginal-microservices",
+    when: (r) => shape(r).level === "microservices" && r.independentTeams === SPLIT_TEAM_COUNT && !r.unevenScaling,
+    title: "A marginal case for microservices",
+    explain: `The split rests only on the team threshold, and it is a rule of thumb. Exactly ${SPLIT_TEAM_COUNT} independent teams with no uneven scaling meets the line, but separate deployments add ongoing cost that a slightly larger team would justify more clearly.`,
     options: [
-      "Start with a modular monolith: one deployable with clear internal boundaries.",
-      "Split out a service only when a team or a scaling need clearly calls for it.",
+      "Keep one deployable with strict module boundaries, and revisit when a team or a scaling need grows.",
+      "Split only the one module whose team or traffic clearly justifies its own deployment.",
     ],
     concepts: ["modular-monolith"],
   },
