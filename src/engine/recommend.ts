@@ -1,11 +1,13 @@
 import { componentOrder } from "../content/components";
 import { BASELINE, resolveAdd, resolveReason, rules, topology } from "../content/rules";
+import { shape, type Shape } from "../content/shape";
 import { tensions } from "../content/tensions";
 import type { Reason, Requirements, Topology } from "../content/types";
 
 export type Recommendation = {
   /** Component ID → every reason it was added, in display order. */
   components: Record<string, Reason[]>;
+  shape: Shape;
   topology: { level: Topology; reason: string };
   tensions: { id: string; title: string; explain: string; options: string[]; concepts: string[] }[];
 };
@@ -53,6 +55,7 @@ export function recommend(r: Requirements): Recommendation {
 
   return {
     components,
+    shape: shape(r),
     topology: topology(r),
     tensions: tensions
       .filter((t) => t.when(r))

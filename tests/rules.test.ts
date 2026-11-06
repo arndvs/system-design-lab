@@ -211,6 +211,10 @@ describe("application shape", () => {
   it("quotes the team count in the reason", () => {
     expect(shape(req({ opsMaturity: "solid", independentTeams: 4 })).reason).toContain("4 independent teams");
   });
+
+  it("includes the shape in the recommendation", () => {
+    expect(recommend(req({ opsMaturity: "solid", independentTeams: 3 })).shape.level).toBe("microservices");
+  });
 });
 
 describe("evolve", () => {
