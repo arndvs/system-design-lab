@@ -37,6 +37,7 @@ const chip = (driver: Driver) =>
 
 export type ResultsEls = {
   summary: HTMLElement;
+  shape: HTMLElement;
   topology: HTMLElement;
   tensions: HTMLElement;
   changes: HTMLElement;
@@ -46,6 +47,12 @@ export type ResultsEls = {
 export function renderResults(els: ResultsEls, rec: Recommendation, previous: Recommendation | null) {
   const ids = Object.keys(rec.components);
   els.summary.textContent = `${ids.length} components · ${topologyLabel[rec.topology.level].toLowerCase()}`;
+
+  const shapeLabel = { "modular-monolith": "Modular monolith", microservices: "Microservices" }[rec.shape.level];
+  els.shape.innerHTML = `
+    <p class="text-xs font-medium text-muted">Application shape</p>
+    <p class="mt-1 font-semibold">${shapeLabel}</p>
+    <p class="mt-1 text-sm text-muted">${esc(rec.shape.reason)}</p>`;
 
   els.topology.innerHTML = `
     <p class="text-xs font-medium text-muted">Where it runs</p>

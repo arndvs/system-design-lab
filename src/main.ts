@@ -9,6 +9,7 @@ const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)
 const form = $<HTMLFormElement>("#requirements");
 const els: ResultsEls = {
   summary: $("#summary"),
+  shape: $("#shape"),
   topology: $("#topology"),
   tensions: $("#tensions"),
   changes: $("#changes"),

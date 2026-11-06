@@ -1,4 +1,5 @@
 import { downtimeLabel } from "../content/availability";
+import { shape } from "../content/shape";
 import { AVAILABILITY_TARGETS, type Availability, type Consistency, type DataShape, type Requirements } from "../content/types";
 
 type BoolKey = { [K in keyof Requirements]: Requirements[K] extends boolean ? K : never }[keyof Requirements];
@@ -104,6 +105,22 @@ export function renderRequirements(form: HTMLFormElement, r: Requirements) {
         functionalSwitches.map((s) => toggle(r, s)).join(""),
     ) +
     group(
+      "Team and operations",
+      "These decide the application shape: one deployable, or separately deployed services.",
+      numberField("independentTeams", "Independent teams", r.independentTeams, "teams") +
+        toggle(r, { key: "unevenScaling", label: "Uneven scaling", hint: "Some parts need far more capacity than others" }) +
+        segmented(
+          "opsMaturity",
+          "Operations maturity",
+          [
+            { value: "limited", label: "Limited" },
+            { value: "solid", label: "Solid" },
+          ],
+          r.opsMaturity,
+        ) +
+        `<div data-show="services" class="${shape(r).level === "microservices" ? "" : "hidden"}">${numberField("serviceCount", "Services", r.serviceCount, "services")}</div>`,
+    ) +
+    group(
       "How well",
       "Non-functional requirements, as measurable targets, decide how they're arranged.",
       segmented(
@@ -134,6 +151,10 @@ export function readRequirements(form: HTMLFormElement, previous: Requirements):
     dataShape: (data.get("dataShape") as DataShape) ?? previous.dataShape,
     consistency: (data.get("consistency") as Consistency) ?? previous.consistency,
     availability: Number(data.get("availability")) as Availability,
+    independentTeams: Math.max(1, Math.round(num("independentTeams"))),
+    unevenScaling: data.has("unevenScaling"),
+    opsMaturity: data.get("opsMaturity") === "solid" ? "solid" : "limited",
+    serviceCount: Math.round(num("serviceCount")),
     peakRps: num("peakRps"),
     readWriteRatio: num("readWriteRatio"),
     latencyMs: num("latencyMs"),
@@ -143,6 +164,7 @@ export function readRequirements(form: HTMLFormElement, previous: Requirements):
   }
 
   // Keep the dependent bits of the form in step without re-rendering it (which would steal focus).
+  form.querySelector('[data-show="services"]')?.classList.toggle("hidden", shape(r).level !== "microservices");
   form.querySelector("[data-downtime]")!.textContent = downtimeLabel(r.availability);
   form.querySelector("[data-consistency-hint]")!.textContent = consistencyHint[r.consistency];
   return r;
