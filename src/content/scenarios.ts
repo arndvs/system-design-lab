@@ -1,60 +1,201 @@
-import type { Requirements } from "./types";
+import { defaultRequirements } from "../engine/recommend";
+import type { Requirements, Topology } from "./types";
 
 export type Scenario = {
   id: string;
   title: string;
   brief: string;
+  /** The brief's requirements, sorted the way an interviewer expects. */
+  functional: string[];
+  nonFunctional: string[];
   requirements: Requirements;
   /** The reference answer. Tests check that the engine produces exactly this. */
-  expected: string[];
+  expected: { components: string[]; topology: Topology; tensions: string[] };
   walkthrough: string[];
 };
+
+const req = (over: Partial<Requirements>): Requirements => ({ ...defaultRequirements, ...over });
 
 export const scenarios: Scenario[] = [
   {
     id: "url-shortener",
     title: "URL shortener",
-    brief: "Turn long links into short codes and redirect anyone who opens one. Around 100 million new links a month, read far more than written.",
-    requirements: {
+    brief:
+      "Turn long links into short codes and redirect anyone who opens one. About 100 million new links a month, opened far more often than created.",
+    functional: ["Create a short code for a long URL.", "Redirect anyone who opens a short code to the original URL."],
+    nonFunctional: [
+      "Redirects stay up 99.99% of the time.",
+      "Redirects respond within 50 ms at the 99th percentile.",
+      "Handle 8,000 requests per second at peak, about 100 reads per write.",
+    ],
+    requirements: req({
+      dataShape: "key-value",
       peakRps: 8000,
       readWriteRatio: 100,
-      dataShape: "key-value",
-      strongConsistency: false,
-      highAvailability: true,
-      globalUsers: false,
-      lowLatency: true,
-      eventDriven: false,
-      mediaUploads: false,
+      availability: 99.99,
+      latencyMs: 50,
+    }),
+    expected: {
+      components: ["load-balancer", "app-servers", "cache", "key-value-store", "metrics-monitoring", "centralized-logging"],
+      topology: "multi-zone",
+      tensions: [],
     },
-    expected: ["key-value-store", "load-balancer", "cache", "metrics-monitoring", "centralized-logging"],
     walkthrough: [
-      "Every lookup is by short code, so a key-value store fits and scales by adding partitions.",
-      "Redirects must stay up and peak at thousands per second, so several stateless servers sit behind a load balancer.",
-      "Popular links are clicked over and over; at 100 reads per write, a cache absorbs most lookups.",
-      "Metrics and logs are baseline: you need to see redirect latency and error rate from day one.",
+      "Every lookup is by short code, so a key-value store fits, and it replicates and partitions on its own.",
+      "At 99.99%, about 53 minutes of downtime a year, run stateless servers across zones behind a load balancer.",
+      "Popular links get clicked again and again; at 100 reads per write and a 50 ms target, a cache answers most redirects.",
     ],
   },
   {
     id: "order-checkout",
     title: "Online store checkout",
-    brief: "Take payment, reserve stock and record the order. Totals must always be correct, and confirmation emails can arrive a little later.",
-    requirements: {
+    brief:
+      "Signed-in shoppers pay, stock is reserved and the order is recorded. Totals and stock counts must always be exact; confirmation emails can arrive a little later.",
+    functional: ["Shoppers sign in.", "Place an order and pay for it.", "Send a confirmation email."],
+    nonFunctional: [
+      "Checkout is available 99.99% of the time.",
+      "Stock counts and payments are never stale or double-counted; other data may lag.",
+      "Payment and personal data are protected.",
+    ],
+    requirements: req({
+      dataShape: "relational",
+      userAccounts: true,
+      asyncWork: true,
       peakRps: 400,
       readWriteRatio: 3,
-      dataShape: "relational",
-      strongConsistency: true,
-      highAvailability: true,
-      globalUsers: false,
-      lowLatency: false,
-      eventDriven: true,
-      mediaUploads: false,
+      availability: 99.99,
+      consistency: "mixed",
+      sensitiveData: true,
+    }),
+    expected: {
+      components: [
+        "rate-limiter",
+        "load-balancer",
+        "auth-service",
+        "app-servers",
+        "relational-database",
+        "database-replicas",
+        "message-queue",
+        "metrics-monitoring",
+        "centralized-logging",
+      ],
+      topology: "multi-zone",
+      tensions: [],
     },
-    expected: ["relational-database", "load-balancer", "message-queue", "metrics-monitoring", "centralized-logging"],
     walkthrough: [
-      "Orders, line items, stock and payments reference each other and must change together, so a relational database with transactions fits.",
-      "Checkout can't go down, so run redundant app servers behind a load balancer, even though traffic is modest.",
-      "Emails and warehouse notifications go through a queue, so a slow email provider never delays a purchase.",
-      "There's no cache: reads aren't dominant, and stale stock counts would cause overselling.",
+      "Orders, line items, stock and payments reference each other and must change together: a relational database with transactions.",
+      "Only stock and payment data need to be exact, so consistency is mixed rather than strong everywhere.",
+      "At 99.99%, a standby database in another zone is ready to take over; rebuilding from backup would blow the downtime budget.",
+      "Emails go through a queue, so a slow email provider never holds up a purchase.",
+      "There's no cache: reads don't dominate, and a stale stock count would cause overselling.",
+    ],
+  },
+  {
+    id: "news-feed",
+    title: "Social news feed",
+    brief:
+      "Users post text and photos and scroll a feed of posts from people they follow. Hundreds of millions of feed views a day, worldwide.",
+    functional: ["Users sign in.", "Publish a post with photos.", "Scroll a feed of followed users' posts."],
+    nonFunctional: [
+      "Available 99.9% of the time.",
+      "Feeds load within 200 ms at the 99th percentile.",
+      "A new post may take a few seconds to reach followers.",
+      "Peaks of 20,000 requests per second, about 50 reads per write.",
+    ],
+    requirements: req({
+      dataShape: "document",
+      userAccounts: true,
+      mediaUploads: true,
+      asyncWork: true,
+      peakRps: 20000,
+      readWriteRatio: 50,
+      availability: 99.9,
+      latencyMs: 200,
+      consistency: "eventual",
+      globalUsers: true,
+    }),
+    expected: {
+      components: [
+        "cdn",
+        "rate-limiter",
+        "load-balancer",
+        "auth-service",
+        "app-servers",
+        "cache",
+        "document-database",
+        "database-replicas",
+        "object-storage",
+        "message-queue",
+        "metrics-monitoring",
+        "centralized-logging",
+      ],
+      topology: "single-zone",
+      tensions: [],
+    },
+    walkthrough: [
+      "A post and its media references are read together, so each is a document.",
+      "Publishing puts a job on a queue that fans the post out to followers' feeds, which is why a few seconds' delay is acceptable.",
+      "At 50 reads per write, a cache holds ready-made feeds and replicas absorb the rest of the reads.",
+      "Photos go straight to object storage and reach viewers worldwide through a CDN.",
+    ],
+  },
+  {
+    id: "global-store",
+    title: "Global storefront",
+    brief:
+      "A store selling worldwide: shoppers search the catalog, view product photos and buy. Pages must feel fast everywhere, the last unit must never be sold twice, and the business wants daily sales reports.",
+    functional: [
+      "Shoppers sign in.",
+      "Search the catalog by text.",
+      "View product pages with photos.",
+      "Buy items.",
+      "Produce daily sales reports.",
+    ],
+    nonFunctional: [
+      "Available 99.99% of the time.",
+      "Pages respond within 100 ms at the 99th percentile for users everywhere.",
+      "Stock counts are always exact; catalog data may lag briefly.",
+      "Payment and personal data are protected.",
+    ],
+    requirements: req({
+      dataShape: "relational",
+      userAccounts: true,
+      mediaUploads: true,
+      fullTextSearch: true,
+      reporting: true,
+      peakRps: 5000,
+      readWriteRatio: 20,
+      availability: 99.99,
+      latencyMs: 100,
+      consistency: "mixed",
+      globalUsers: true,
+      sensitiveData: true,
+    }),
+    expected: {
+      components: [
+        "cdn",
+        "rate-limiter",
+        "load-balancer",
+        "auth-service",
+        "app-servers",
+        "cache",
+        "relational-database",
+        "database-replicas",
+        "search-index",
+        "object-storage",
+        "etl-pipeline",
+        "data-warehouse",
+        "metrics-monitoring",
+        "centralized-logging",
+      ],
+      topology: "multi-region",
+      tensions: ["consistency-vs-availability", "latency-vs-consistency"],
+    },
+    walkthrough: [
+      "Exact stock is a non-functional requirement: it says how correct the system must be, not what it does.",
+      "Worldwide users at 99.99% call for several regions, but exact stock must be decided in one place, which is the tension to discuss.",
+      "A common answer: give stock a home region and route purchases there, while catalog pages, search and photos are served locally from replicas, the cache and the CDN.",
+      "Reports run in a warehouse fed nightly, so they never slow down shoppers.",
     ],
   },
 ];

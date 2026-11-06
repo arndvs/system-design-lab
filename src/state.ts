@@ -1,37 +1,57 @@
-import type { Requirements } from "./content/types";
+import { AVAILABILITY_TARGETS, type Requirements } from "./content/types";
 import { defaultRequirements } from "./engine/recommend";
 
-const BOOL_KEYS = [
-  "strongConsistency",
-  "highAvailability",
-  "globalUsers",
-  "lowLatency",
-  "eventDriven",
-  "mediaUploads",
-] as const satisfies readonly (keyof Requirements)[];
+/** Short URL keys, so shared links stay readable. */
+const KEYS: Record<keyof Requirements, string> = {
+  dataShape: "data",
+  userAccounts: "accounts",
+  mediaUploads: "media",
+  fullTextSearch: "search",
+  asyncWork: "async",
+  realtimeAnalytics: "realtime",
+  reporting: "reports",
+  microservices: "micro",
+  serviceCount: "services",
+  peakRps: "rps",
+  readWriteRatio: "rw",
+  availability: "avail",
+  latencyMs: "p99",
+  consistency: "consistency",
+  globalUsers: "global",
+  sensitiveData: "sensitive",
+};
 
-/** Encodes only values that differ from the defaults, so shared URLs stay short. */
+const ENUMS: Partial<Record<keyof Requirements, readonly (string | number)[]>> = {
+  dataShape: ["relational", "key-value", "document", "graph"],
+  consistency: ["eventual", "mixed", "strong"],
+  availability: AVAILABILITY_TARGETS,
+};
+
+/** Encodes only values that differ from the defaults. */
 export function toHash(r: Requirements): string {
   const p = new URLSearchParams();
-  if (r.peakRps !== defaultRequirements.peakRps) p.set("rps", String(r.peakRps));
-  if (r.readWriteRatio !== defaultRequirements.readWriteRatio) p.set("rw", String(r.readWriteRatio));
-  if (r.dataShape !== defaultRequirements.dataShape) p.set("data", r.dataShape);
-  for (const k of BOOL_KEYS) if (r[k]) p.set(k, "1");
+  for (const [field, key] of Object.entries(KEYS) as [keyof Requirements, string][]) {
+    const v = r[field];
+    if (v === defaultRequirements[field]) continue;
+    p.set(key, typeof v === "boolean" ? (v ? "1" : "0") : String(v));
+  }
   return p.toString();
 }
 
+/** Parses a hash, falling back to defaults for anything missing or invalid. */
 export function fromHash(hash: string): Requirements {
   const p = new URLSearchParams(hash.replace(/^#/, ""));
-  const num = (key: string, fallback: number) => {
-    const n = Number(p.get(key));
-    return Number.isFinite(n) && n > 0 ? n : fallback;
-  };
-  const r: Requirements = {
-    ...defaultRequirements,
-    peakRps: num("rps", defaultRequirements.peakRps),
-    readWriteRatio: num("rw", defaultRequirements.readWriteRatio),
-    dataShape: p.get("data") === "key-value" ? "key-value" : "relational",
-  };
-  for (const k of BOOL_KEYS) r[k] = p.get(k) === "1";
-  return r;
+  const r: Record<string, unknown> = { ...defaultRequirements };
+  for (const [field, key] of Object.entries(KEYS) as [keyof Requirements, string][]) {
+    const raw = p.get(key);
+    if (raw === null) continue;
+    const fallback = defaultRequirements[field];
+    const allowed = ENUMS[field];
+    if (typeof fallback === "boolean") r[field] = raw === "1";
+    else if (typeof fallback === "number") {
+      const n = Number(raw);
+      if (Number.isFinite(n) && n > 0 && (!allowed || allowed.includes(n))) r[field] = n;
+    } else if (!allowed || allowed.includes(raw)) r[field] = raw;
+  }
+  return r as Requirements;
 }

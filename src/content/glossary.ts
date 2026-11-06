@@ -1,6 +1,87 @@
 export type GlossaryEntry = { term: string; definition: string };
 
 export const glossary: Record<string, GlossaryEntry> = {
+  "cap-theorem": {
+    term: "CAP theorem",
+    definition:
+      "When a network partition splits a distributed system, each side must either keep answering and risk disagreeing (availability) or refuse requests until it can coordinate (consistency).",
+  },
+  "change-data-capture": {
+    term: "Change data capture",
+    definition: "Reading a database's own change log to stream every insert, update and delete to other systems.",
+  },
+  "columnar-storage": {
+    term: "Columnar storage",
+    definition: "Storing each column's values together, so queries that touch a few columns over many rows read far less data.",
+  },
+  consensus: {
+    term: "Consensus",
+    definition: "A protocol, such as Raft or Paxos, that lets a group of servers agree on one value even if some of them fail.",
+  },
+  failover: {
+    term: "Failover",
+    definition: "Switching traffic from a failed primary to a standby that takes over its role.",
+  },
+  "horizontal-scaling": {
+    term: "Horizontal scaling",
+    definition: "Adding more machines to share the load, as opposed to vertical scaling, which means buying a bigger machine.",
+  },
+  "inverted-index": {
+    term: "Inverted index",
+    definition: "A map from each word to the list of documents that contain it, the core structure behind full-text search.",
+  },
+  "least-privilege": {
+    term: "Least privilege",
+    definition: "Giving each user and service only the permissions it needs, so a compromise can do limited damage.",
+  },
+  "modular-monolith": {
+    term: "Modular monolith",
+    definition: "One deployable application divided into well-separated modules, so it can be split into services later if needed.",
+  },
+  mtls: {
+    term: "Mutual TLS (mTLS)",
+    definition: "TLS where both sides present certificates, so each service proves its identity to the other.",
+  },
+  nines: {
+    term: "Nines of availability",
+    definition:
+      "Shorthand for uptime targets: 99.9% (three nines) allows about 8.8 hours of downtime a year, 99.99% about 53 minutes, 99.999% about 5 minutes.",
+  },
+  oauth: {
+    term: "OAuth 2.0 / OpenID Connect",
+    definition: "Standard protocols for granting access with tokens (OAuth) and for signing users in on top of it (OpenID Connect).",
+  },
+  "oltp-olap": {
+    term: "OLTP vs. OLAP",
+    definition:
+      "Online transaction processing serves many small reads and writes for live users; online analytical processing runs few, large queries over lots of history.",
+  },
+  pacelc: {
+    term: "PACELC",
+    definition:
+      "An extension of CAP: if there's a Partition, choose Availability or Consistency; Else, even when healthy, choose lower Latency or Consistency.",
+  },
+  "read-your-writes": {
+    term: "Read-your-writes",
+    definition: "A guarantee that after you change something, your own next read shows the change, even if others may briefly not see it.",
+  },
+  "replication-lag": {
+    term: "Replication lag",
+    definition: "How far behind the primary a replica is, in time or in unapplied changes.",
+  },
+  "signed-url": {
+    term: "Signed URL",
+    definition: "A link that grants temporary access to one private file, so clients can upload or download it directly.",
+  },
+  "token-bucket": {
+    term: "Token bucket",
+    definition:
+      "A rate-limiting algorithm: a bucket refills with tokens at a steady rate, each request spends one, and an empty bucket means wait.",
+  },
+  windowing: {
+    term: "Windowing",
+    definition: "Grouping a stream of events into time slices, such as each minute, so you can count or aggregate them.",
+  },
   acid: {
     term: "ACID",
     definition:

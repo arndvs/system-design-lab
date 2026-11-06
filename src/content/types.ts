@@ -26,29 +26,81 @@ export type Component = {
   sources: Source[];
 };
 
-export type DataShape = "relational" | "key-value";
+// ---------------------------------------------------------------------------
+// Requirements
+//
+// Split the way requirements are gathered in practice:
+//   - Functional: what the system does. These decide WHICH components exist.
+//   - Non-functional: how well it must do it, as measurable targets. These
+//     decide HOW the components are arranged and replicated.
+// ---------------------------------------------------------------------------
+
+export type DataShape = "relational" | "key-value" | "document" | "graph";
+
+/** Availability targets, as a percentage of time the service is up. */
+export const AVAILABILITY_TARGETS = [99, 99.9, 99.99, 99.999] as const;
+export type Availability = (typeof AVAILABILITY_TARGETS)[number];
+
+/**
+ * - eventual: every kind of data may be briefly stale.
+ * - mixed: some data (balances, stock counts) must never be stale; the rest may be.
+ * - strong: every read must see the latest write.
+ */
+export type Consistency = "eventual" | "mixed" | "strong";
 
 export type Requirements = {
+  // Functional: what it does
+  dataShape: DataShape;
+  userAccounts: boolean;
+  mediaUploads: boolean;
+  fullTextSearch: boolean;
+  asyncWork: boolean;
+  realtimeAnalytics: boolean;
+  reporting: boolean;
+  microservices: boolean;
+  /** Only meaningful when `microservices` is true. */
+  serviceCount: number;
+
+  // Non-functional: how well
   /** Expected peak requests per second. */
   peakRps: number;
   /** Reads per write, e.g. 10 means 10:1. */
   readWriteRatio: number;
-  dataShape: DataShape;
-  strongConsistency: boolean;
-  highAvailability: boolean;
+  availability: Availability;
+  /** 99th-percentile response-time target in milliseconds. */
+  latencyMs: number;
+  consistency: Consistency;
   globalUsers: boolean;
-  lowLatency: boolean;
-  eventDriven: boolean;
-  mediaUploads: boolean;
+  sensitiveData: boolean;
 };
+
+/** Which side of the requirements pulled something in. */
+export type Driver = "functional" | "non-functional" | "baseline";
+
+export type Reason = { text: string; driver: Driver };
 
 export type Rule = {
   id: string;
+  driver: Driver;
   when: (r: Requirements) => boolean;
-  add: string[];
+  add: string[] | ((r: Requirements) => string[]);
   reason: string | ((r: Requirements) => string);
   /** Ordering for the evolution slider: lower stages happen first. */
   stage: number;
   /** The pain that forces this step, shown on the evolution slider. */
   bottleneck: string;
+};
+
+export type Topology = "single-server" | "single-zone" | "multi-zone" | "multi-region";
+
+/** Two requirements pulling against each other. */
+export type Tension = {
+  id: string;
+  when: (r: Requirements) => boolean;
+  title: string;
+  explain: string | ((r: Requirements) => string);
+  /** What a designer usually does about it. */
+  options: string[];
+  /** Glossary keys for the concepts involved. */
+  concepts: string[];
 };
