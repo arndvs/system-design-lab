@@ -103,10 +103,6 @@ Corrections and new components are welcome. Every entry is original writing with
 - Sketch the whole path from client to storage first, then go deep on the two or three components that carry the most risk.
 - For each component, have one sentence ready on why it's there and one on what it costs you.
 
-## Acknowledgements
-
-Inspired by [Bhavul Gauri's System Design Cheat Sheet](https://github.com/bhavul/system-design-cheatsheet). This project is an independent rewrite and shares no code or text with it.
-
 ## License
 
 [MIT](LICENSE)
