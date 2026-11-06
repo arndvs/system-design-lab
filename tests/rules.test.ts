@@ -46,7 +46,7 @@ describe("functional requirements decide which components exist", () => {
     [{ asyncWork: true }, ["message-queue"]],
     [{ realtimeAnalytics: true }, ["message-queue", "stream-processing"]],
     [{ reporting: true }, ["etl-pipeline", "data-warehouse"]],
-    [{ microservices: true, serviceCount: 6 }, ["api-gateway", "distributed-tracing"]],
+    [{ opsMaturity: "solid", independentTeams: 3, serviceCount: 6 }, ["api-gateway", "distributed-tracing"]],
   ];
   for (const [over, expected] of cases) {
     it(`${Object.keys(over)[0]} → ${expected.join(", ")}`, () => {
@@ -59,14 +59,18 @@ describe("functional requirements decide which components exist", () => {
   }
 
   it("adds discovery and a mesh only as the service count grows", () => {
-    expect(ids(req({ microservices: true, serviceCount: 6 }))).not.toContain("service-discovery");
-    expect(ids(req({ microservices: true, serviceCount: 12 }))).toContain("service-discovery");
-    expect(ids(req({ microservices: true, serviceCount: 12 }))).not.toContain("service-mesh");
-    expect(ids(req({ microservices: true, serviceCount: 30 }))).toContain("service-mesh");
+    const micro = { opsMaturity: "solid" as const, independentTeams: 3 };
+    expect(ids(req({ ...micro, serviceCount: 6 }))).not.toContain("service-discovery");
+    expect(ids(req({ ...micro, serviceCount: 12 }))).toContain("service-discovery");
+    expect(ids(req({ ...micro, serviceCount: 12 }))).not.toContain("service-mesh");
+    expect(ids(req({ ...micro, serviceCount: 30 }))).toContain("service-mesh");
   });
 
-  it("ignores the service count when not using microservices", () => {
-    expect(ids(req({ microservices: false, serviceCount: 50 }))).not.toContain("service-mesh");
+  it("adds no service-level components unless the shape is microservices", () => {
+    for (const id of ["api-gateway", "distributed-tracing", "service-discovery", "service-mesh"]) {
+      expect(ids(req())).not.toContain(id);
+    }
+    expect(ids(req({ independentTeams: 10, serviceCount: 50 }))).not.toContain("service-mesh");
   });
 });
 
@@ -143,8 +147,9 @@ describe("tensions", () => {
   });
 
   it("questions microservices with very few services", () => {
-    expect(tensionIds(req({ microservices: true, serviceCount: 2 }))).toContain("too-few-services");
-    expect(tensionIds(req({ microservices: true, serviceCount: 8 }))).not.toContain("too-few-services");
+    const micro = { opsMaturity: "solid" as const, independentTeams: 3 };
+    expect(tensionIds(req({ ...micro, serviceCount: 2 }))).toContain("too-few-services");
+    expect(tensionIds(req({ ...micro, serviceCount: 8 }))).not.toContain("too-few-services");
   });
 
   it("finds no tensions in the default design", () => {

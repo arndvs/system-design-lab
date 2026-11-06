@@ -101,9 +101,7 @@ export function renderRequirements(form: HTMLFormElement, r: Requirements) {
       subhead("Main data") +
         `<div class="grid grid-cols-2 gap-2">${shapeCards}</div>` +
         subhead("Features") +
-        functionalSwitches.map((s) => toggle(r, s)).join("") +
-        toggle(r, { key: "microservices", label: "Split into services", hint: "Separate teams deploy separately" }) +
-        `<div data-show="microservices" class="${r.microservices ? "" : "hidden"}">${numberField("serviceCount", "How many services", r.serviceCount, "")}</div>`,
+        functionalSwitches.map((s) => toggle(r, s)).join(""),
     ) +
     group(
       "How well",
@@ -136,17 +134,15 @@ export function readRequirements(form: HTMLFormElement, previous: Requirements):
     dataShape: (data.get("dataShape") as DataShape) ?? previous.dataShape,
     consistency: (data.get("consistency") as Consistency) ?? previous.consistency,
     availability: Number(data.get("availability")) as Availability,
-    serviceCount: Math.round(num("serviceCount")),
     peakRps: num("peakRps"),
     readWriteRatio: num("readWriteRatio"),
     latencyMs: num("latencyMs"),
   };
-  for (const { key } of [...functionalSwitches, ...nonFunctionalSwitches, { key: "microservices" as const }]) {
+  for (const { key } of [...functionalSwitches, ...nonFunctionalSwitches]) {
     r[key] = data.has(key);
   }
 
   // Keep the dependent bits of the form in step without re-rendering it (which would steal focus).
-  form.querySelector('[data-show="microservices"]')?.classList.toggle("hidden", !r.microservices);
   form.querySelector("[data-downtime]")!.textContent = downtimeLabel(r.availability);
   form.querySelector("[data-consistency-hint]")!.textContent = consistencyHint[r.consistency];
   return r;

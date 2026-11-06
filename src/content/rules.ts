@@ -1,4 +1,5 @@
 import { downtimeLabel } from "./availability";
+import { shape } from "./shape";
 import type { Requirements, Rule, Topology } from "./types";
 
 // Thresholds are named so the reasons can quote them and tests can pin them.
@@ -154,7 +155,7 @@ export const rules: Rule[] = [
   {
     id: "microservices",
     driver: "functional",
-    when: (r) => r.microservices,
+    when: (r) => shape(r).level === "microservices",
     add: ["api-gateway", "distributed-tracing"],
     reason:
       "You're splitting into services. A gateway gives clients one front door and handles shared concerns; tracing shows where time goes as a request crosses services.",
@@ -165,7 +166,7 @@ export const rules: Rule[] = [
   {
     id: "many-services",
     driver: "functional",
-    when: (r) => r.microservices && r.serviceCount >= DISCOVERY_SERVICE_COUNT,
+    when: (r) => shape(r).level === "microservices" && r.serviceCount >= DISCOVERY_SERVICE_COUNT,
     add: ["service-discovery"],
     reason: (r) =>
       `With ${r.serviceCount} services scaling independently, addresses change constantly; services look each other up by name instead.`,
@@ -176,7 +177,7 @@ export const rules: Rule[] = [
   {
     id: "very-many-services",
     driver: "functional",
-    when: (r) => r.microservices && r.serviceCount >= MESH_SERVICE_COUNT,
+    when: (r) => shape(r).level === "microservices" && r.serviceCount >= MESH_SERVICE_COUNT,
     add: ["service-mesh"],
     reason: (r) =>
       `At ${r.serviceCount} services, re-implementing retries, timeouts and encryption in each one costs more than running a mesh that does it for all of them.`,

@@ -18,7 +18,6 @@ export const defaultRequirements: Requirements = {
   asyncWork: false,
   realtimeAnalytics: false,
   reporting: false,
-  microservices: false,
   serviceCount: 8,
   independentTeams: 1,
   unevenScaling: false,

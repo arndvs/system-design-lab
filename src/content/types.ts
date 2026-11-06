@@ -57,8 +57,7 @@ export type Requirements = {
   asyncWork: boolean;
   realtimeAnalytics: boolean;
   reporting: boolean;
-  microservices: boolean;
-  /** Only meaningful when `microservices` is true. */
+  /** Only meaningful when the application shape is microservices. */
   serviceCount: number;
   /** Teams that deploy on their own schedule. Decides application shape. */
   independentTeams: number;

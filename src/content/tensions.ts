@@ -1,5 +1,6 @@
 import { downtimeLabel } from "./availability";
 import { FEW_SERVICES, needsCache, TIGHT_LATENCY_MS } from "./rules";
+import { shape } from "./shape";
 import type { Tension } from "./types";
 
 /** Combinations of requirements that pull against each other. */
@@ -68,7 +69,7 @@ export const tensions: Tension[] = [
   },
   {
     id: "too-few-services",
-    when: (r) => r.microservices && r.serviceCount < FEW_SERVICES,
+    when: (r) => shape(r).level === "microservices" && r.serviceCount < FEW_SERVICES,
     title: "Microservices with very few services",
     explain: (r) =>
       `With ${r.serviceCount} service${r.serviceCount === 1 ? "" : "s"}, you take on network calls, partial failures and harder debugging, without the benefit of many teams deploying independently.`,

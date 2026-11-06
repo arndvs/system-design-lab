@@ -10,7 +10,6 @@ const KEYS: Record<keyof Requirements, string> = {
   asyncWork: "async",
   realtimeAnalytics: "realtime",
   reporting: "reports",
-  microservices: "micro",
   serviceCount: "services",
   independentTeams: "teams",
   unevenScaling: "scaling",
