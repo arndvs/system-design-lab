@@ -4,7 +4,8 @@ import { BASELINE } from "../src/content/rules";
 import { scenarios } from "../src/content/scenarios";
 import type { Requirements } from "../src/content/types";
 import { evolve } from "../src/engine/evolve";
-import { defaultRequirements, diff, recommend, shape } from "../src/engine/recommend";
+import { shape } from "../src/content/shape";
+import { defaultRequirements, diff, recommend } from "../src/engine/recommend";
 
 const req = (over: Partial<Requirements> = {}): Requirements => ({ ...defaultRequirements, ...over });
 const ids = (r: Requirements) => Object.keys(recommend(r).components).sort();
