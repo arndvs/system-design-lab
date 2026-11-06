@@ -57,9 +57,14 @@ export type Requirements = {
   asyncWork: boolean;
   realtimeAnalytics: boolean;
   reporting: boolean;
-  microservices: boolean;
-  /** Only meaningful when `microservices` is true. */
+  /** Only meaningful when the application shape is microservices. */
   serviceCount: number;
+  /** Teams that deploy on their own schedule. Decides application shape. */
+  independentTeams: number;
+  /** Some parts of the product need far more capacity than others. */
+  unevenScaling: boolean;
+  /** Whether the team can run separately deployed services: monitoring, on-call, deploys. */
+  opsMaturity: "limited" | "solid";
 
   // Non-functional: how well
   /** Expected peak requests per second. */
@@ -77,10 +82,14 @@ export type Requirements = {
 /** Which side of the requirements pulled something in. */
 export type Driver = "functional" | "non-functional" | "baseline";
 
-export type Reason = { text: string; driver: Driver };
+/** "rule-of-thumb" when a threshold decides the rule: the number is a judgment, not a sourced fact. */
+export type Basis = "definition" | "rule-of-thumb";
+
+export type Reason = { text: string; driver: Driver; basis: Basis };
 
 export type Rule = {
   id: string;
+  basis: Basis;
   driver: Driver;
   when: (r: Requirements) => boolean;
   add: string[] | ((r: Requirements) => string[]);

@@ -32,11 +32,14 @@ const topologyLabel: Record<Topology, string> = {
   "multi-region": "Several regions",
 };
 
+const ruleOfThumbTag = `<span class="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset bg-amber-500/10 text-amber-300 ring-amber-500/30">rule of thumb</span>`;
+
 const chip = (driver: Driver) =>
   `<span class="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${driverStyle[driver]}">${driverLabel[driver]}</span>`;
 
 export type ResultsEls = {
   summary: HTMLElement;
+  shape: HTMLElement;
   topology: HTMLElement;
   tensions: HTMLElement;
   changes: HTMLElement;
@@ -46,6 +49,12 @@ export type ResultsEls = {
 export function renderResults(els: ResultsEls, rec: Recommendation, previous: Recommendation | null) {
   const ids = Object.keys(rec.components);
   els.summary.textContent = `${ids.length} components · ${topologyLabel[rec.topology.level].toLowerCase()}`;
+
+  const shapeLabel = { "modular-monolith": "Modular monolith", microservices: "Microservices" }[rec.shape.level];
+  els.shape.innerHTML = `
+    <p class="text-xs font-medium text-muted">Application shape</p>
+    <p class="mt-1 font-semibold">${shapeLabel}</p>
+    <p class="mt-1 text-sm text-muted">${esc(rec.shape.reason)}</p>`;
 
   els.topology.innerHTML = `
     <p class="text-xs font-medium text-muted">Where it runs</p>
@@ -85,7 +94,7 @@ export function renderResults(els: ResultsEls, rec: Recommendation, previous: Re
         <p class="mt-1 text-sm text-muted">${esc(c.oneLiner)}</p>
         <p class="mt-3 text-xs font-medium text-muted">Why it's here</p>
         <ul class="mt-1 space-y-2 text-sm">${rec.components[id]!
-          .map((r) => `<li class="flex items-start gap-2">${chip(r.driver)}<span>${esc(r.text)}</span></li>`)
+          .map((r) => `<li class="flex items-start gap-2">${chip(r.driver)}${r.basis === "rule-of-thumb" ? ruleOfThumbTag : ""}<span>${esc(r.text)}</span></li>`)
           .join("")}</ul>
         <details class="mt-3 text-sm">
           <summary class="cursor-pointer text-accent">Trade-offs and when to skip it</summary>

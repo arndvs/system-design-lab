@@ -10,8 +10,10 @@ const KEYS: Record<keyof Requirements, string> = {
   asyncWork: "async",
   realtimeAnalytics: "realtime",
   reporting: "reports",
-  microservices: "micro",
   serviceCount: "services",
+  independentTeams: "teams",
+  unevenScaling: "scaling",
+  opsMaturity: "ops",
   peakRps: "rps",
   readWriteRatio: "rw",
   availability: "avail",
@@ -24,6 +26,7 @@ const KEYS: Record<keyof Requirements, string> = {
 const ENUMS: Partial<Record<keyof Requirements, readonly (string | number)[]>> = {
   dataShape: ["relational", "key-value", "document", "graph"],
   consistency: ["eventual", "mixed", "strong"],
+  opsMaturity: ["limited", "solid"],
   availability: AVAILABILITY_TARGETS,
 };
 
@@ -38,9 +41,23 @@ export function toHash(r: Requirements): string {
   return p.toString();
 }
 
+/**
+ * Links made before application shape existed used `micro=1` to mean "split
+ * into services". Map it to the team and ops inputs that now produce the same
+ * shape. New keys always win when both are present.
+ */
+function withLegacyKeys(p: URLSearchParams): URLSearchParams {
+  if (p.get("micro") !== "1") return p;
+  const migrated = new URLSearchParams(p);
+  migrated.delete("micro");
+  if (!migrated.has("ops")) migrated.set("ops", "solid");
+  if (!migrated.has("teams")) migrated.set("teams", "3");
+  return migrated;
+}
+
 /** Parses a hash, falling back to defaults for anything missing or invalid. */
 export function fromHash(hash: string): Requirements {
-  const p = new URLSearchParams(hash.replace(/^#/, ""));
+  const p = withLegacyKeys(new URLSearchParams(hash.replace(/^#/, "")));
   const r: Record<string, unknown> = { ...defaultRequirements };
   for (const [field, key] of Object.entries(KEYS) as [keyof Requirements, string][]) {
     const raw = p.get(key);

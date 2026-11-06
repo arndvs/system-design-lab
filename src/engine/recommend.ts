@@ -1,11 +1,13 @@
 import { componentOrder } from "../content/components";
 import { BASELINE, resolveAdd, resolveReason, rules, topology } from "../content/rules";
+import { shape, type Shape } from "../content/shape";
 import { tensions } from "../content/tensions";
 import type { Reason, Requirements, Topology } from "../content/types";
 
 export type Recommendation = {
   /** Component ID → every reason it was added, in display order. */
   components: Record<string, Reason[]>;
+  shape: Shape;
   topology: { level: Topology; reason: string };
   tensions: { id: string; title: string; explain: string; options: string[]; concepts: string[] }[];
 };
@@ -18,8 +20,10 @@ export const defaultRequirements: Requirements = {
   asyncWork: false,
   realtimeAnalytics: false,
   reporting: false,
-  microservices: false,
   serviceCount: 8,
+  independentTeams: 1,
+  unevenScaling: false,
+  opsMaturity: "limited",
 
   peakRps: 100,
   readWriteRatio: 5,
@@ -38,10 +42,10 @@ export function recommend(r: Requirements): Recommendation {
     if (!reasons.some((x) => x.text === reason.text)) reasons.push(reason);
   };
 
-  for (const { id, reason } of BASELINE) add(id, { text: reason, driver: "baseline" });
+  for (const { id, reason } of BASELINE) add(id, { text: reason, driver: "baseline", basis: "definition" });
   for (const rule of rules) {
     if (!rule.when(r)) continue;
-    const reason: Reason = { text: resolveReason(rule, r), driver: rule.driver };
+    const reason: Reason = { text: resolveReason(rule, r), driver: rule.driver, basis: rule.basis };
     for (const id of resolveAdd(rule, r)) add(id, reason);
   }
 
@@ -51,6 +55,7 @@ export function recommend(r: Requirements): Recommendation {
 
   return {
     components,
+    shape: shape(r),
     topology: topology(r),
     tensions: tensions
       .filter((t) => t.when(r))
@@ -73,3 +78,4 @@ export function diff(before: Recommendation, after: Recommendation) {
     removed: Object.keys(b).filter((id) => !(id in a)),
   };
 }
+

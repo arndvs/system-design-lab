@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { downtimeLabel } from "../src/content/availability";
-import { BASELINE } from "../src/content/rules";
+import { BASELINE, rules } from "../src/content/rules";
 import { scenarios } from "../src/content/scenarios";
 import type { Requirements } from "../src/content/types";
 import { evolve } from "../src/engine/evolve";
+import { shape } from "../src/content/shape";
 import { defaultRequirements, diff, recommend } from "../src/engine/recommend";
 
 const req = (over: Partial<Requirements> = {}): Requirements => ({ ...defaultRequirements, ...over });
@@ -45,7 +46,7 @@ describe("functional requirements decide which components exist", () => {
     [{ asyncWork: true }, ["message-queue"]],
     [{ realtimeAnalytics: true }, ["message-queue", "stream-processing"]],
     [{ reporting: true }, ["etl-pipeline", "data-warehouse"]],
-    [{ microservices: true, serviceCount: 6 }, ["api-gateway", "distributed-tracing"]],
+    [{ opsMaturity: "solid", independentTeams: 3, serviceCount: 6 }, ["api-gateway", "distributed-tracing"]],
   ];
   for (const [over, expected] of cases) {
     it(`${Object.keys(over)[0]} → ${expected.join(", ")}`, () => {
@@ -58,14 +59,18 @@ describe("functional requirements decide which components exist", () => {
   }
 
   it("adds discovery and a mesh only as the service count grows", () => {
-    expect(ids(req({ microservices: true, serviceCount: 6 }))).not.toContain("service-discovery");
-    expect(ids(req({ microservices: true, serviceCount: 12 }))).toContain("service-discovery");
-    expect(ids(req({ microservices: true, serviceCount: 12 }))).not.toContain("service-mesh");
-    expect(ids(req({ microservices: true, serviceCount: 30 }))).toContain("service-mesh");
+    const micro = { opsMaturity: "solid" as const, independentTeams: 3 };
+    expect(ids(req({ ...micro, serviceCount: 6 }))).not.toContain("service-discovery");
+    expect(ids(req({ ...micro, serviceCount: 12 }))).toContain("service-discovery");
+    expect(ids(req({ ...micro, serviceCount: 12 }))).not.toContain("service-mesh");
+    expect(ids(req({ ...micro, serviceCount: 30 }))).toContain("service-mesh");
   });
 
-  it("ignores the service count when not using microservices", () => {
-    expect(ids(req({ microservices: false, serviceCount: 50 }))).not.toContain("service-mesh");
+  it("adds no service-level components unless the shape is microservices", () => {
+    for (const id of ["api-gateway", "distributed-tracing", "service-discovery", "service-mesh"]) {
+      expect(ids(req())).not.toContain(id);
+    }
+    expect(ids(req({ independentTeams: 10, serviceCount: 50 }))).not.toContain("service-mesh");
   });
 });
 
@@ -137,13 +142,23 @@ describe("tensions", () => {
     expect(tensionIds(req({ readWriteRatio: 50, consistency: "mixed" }))).not.toContain("cache-vs-strong-consistency");
   });
 
+  it("flags splitting data across services only when consistency is not eventual", () => {
+    const micro = { opsMaturity: "solid" as const, independentTeams: 3 };
+    expect(tensionIds(req({ ...micro, consistency: "mixed" }))).toContain("split-data-consistency");
+    expect(tensionIds(req({ ...micro, consistency: "eventual" }))).not.toContain("split-data-consistency");
+    expect(tensionIds(req({ consistency: "strong" }))).not.toContain("split-data-consistency");
+  });
+
   it("warns that five nines is expensive", () => {
     expect(tensionIds(req({ availability: 99.999 }))).toContain("five-nines-cost");
   });
 
-  it("questions microservices with very few services", () => {
-    expect(tensionIds(req({ microservices: true, serviceCount: 2 }))).toContain("too-few-services");
-    expect(tensionIds(req({ microservices: true, serviceCount: 8 }))).not.toContain("too-few-services");
+  it("flags a microservices split that rests only on the team threshold", () => {
+    const solid = { opsMaturity: "solid" as const };
+    expect(tensionIds(req({ ...solid, independentTeams: 3 }))).toContain("marginal-microservices");
+    expect(tensionIds(req({ ...solid, independentTeams: 4 }))).not.toContain("marginal-microservices");
+    expect(tensionIds(req({ ...solid, independentTeams: 3, unevenScaling: true }))).not.toContain("marginal-microservices");
+    expect(tensionIds(req({ independentTeams: 3 }))).not.toContain("marginal-microservices");
   });
 
   it("finds no tensions in the default design", () => {
@@ -168,6 +183,7 @@ describe("scenarios", () => {
         expect(Object.keys(rec.components).sort()).toEqual([...s.expected.components].sort());
       });
       it("produces the reference topology", () => expect(rec.topology.level).toBe(s.expected.topology));
+      it("produces the reference shape", () => expect(rec.shape.level).toBe(s.expected.shape));
       it("raises the reference tensions", () => {
         expect(rec.tensions.map((t) => t.id).sort()).toEqual([...s.expected.tensions].sort());
       });
@@ -177,6 +193,64 @@ describe("scenarios", () => {
       });
     });
   }
+});
+
+describe("application shape", () => {
+  it("defaults to a modular monolith and says why", () => {
+    const s = shape(req());
+    expect(s.level).toBe("modular-monolith");
+    expect(s.reason).toContain("limited");
+  });
+
+  it("recommends microservices only with solid ops and enough independent teams", () => {
+    expect(shape(req({ opsMaturity: "solid", independentTeams: 3 })).level).toBe("microservices");
+  });
+
+  it("keeps a modular monolith with few teams, even with solid ops", () => {
+    expect(shape(req({ opsMaturity: "solid", independentTeams: 2 })).level).toBe("modular-monolith");
+  });
+
+  it("keeps a modular monolith with limited ops, whatever the team count", () => {
+    expect(shape(req({ opsMaturity: "limited", independentTeams: 10, unevenScaling: true })).level).toBe("modular-monolith");
+  });
+
+  it("splits for uneven scaling with solid ops, even with one team", () => {
+    expect(shape(req({ opsMaturity: "solid", unevenScaling: true })).level).toBe("microservices");
+  });
+
+  it("quotes the team count in the reason", () => {
+    expect(shape(req({ opsMaturity: "solid", independentTeams: 4 })).reason).toContain("4 independent teams");
+  });
+
+  it("includes the shape in the recommendation", () => {
+    expect(recommend(req({ opsMaturity: "solid", independentTeams: 3 })).shape.level).toBe("microservices");
+  });
+});
+
+describe("basis", () => {
+  it("labels every rule as a definition or a rule of thumb", () => {
+    for (const rule of rules) expect(["definition", "rule-of-thumb"], rule.id).toContain(rule.basis);
+  });
+
+  it("marks exactly the threshold-driven rules as rules of thumb", () => {
+    const thumb = rules.filter((rule) => rule.basis === "rule-of-thumb").map((rule) => rule.id).sort();
+    expect(thumb).toEqual([
+      "availability-redundancy",
+      "availability-standby",
+      "many-services",
+      "read-heavy-cache",
+      "read-heavy-replicas",
+      "scale-out",
+      "tight-latency",
+      "very-many-services",
+      "write-spikes",
+    ]);
+  });
+
+  it("carries the basis into each reason", () => {
+    const reasons = recommend(req({ readWriteRatio: 50 })).components["cache"]!;
+    expect(reasons.some((reason) => reason.basis === "rule-of-thumb")).toBe(true);
+  });
 });
 
 describe("evolve", () => {

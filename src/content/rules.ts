@@ -1,4 +1,5 @@
 import { downtimeLabel } from "./availability";
+import { shape } from "./shape";
 import type { Requirements, Rule, Topology } from "./types";
 
 // Thresholds are named so the reasons can quote them and tests can pin them.
@@ -13,8 +14,6 @@ export const TIGHT_LATENCY_MS = 50;
 /** Service counts at which shared discovery and then a mesh start to pay off. */
 export const DISCOVERY_SERVICE_COUNT = 10;
 export const MESH_SERVICE_COUNT = 25;
-/** Below this many services, microservices usually cost more than they return. */
-export const FEW_SERVICES = 5;
 
 const primaryStore = (r: Requirements): string =>
   ({
@@ -22,20 +21,26 @@ const primaryStore = (r: Requirements): string =>
     "key-value": "key-value-store",
     document: "document-database",
     graph: "graph-database",
-  })[r.dataShape];
+  }[r.dataShape]);
 
-export const needsCache = (r: Requirements) => r.readWriteRatio >= READ_HEAVY_RATIO || r.latencyMs <= TIGHT_LATENCY_MS;
+export const needsCache = (r: Requirements) =>
+  r.readWriteRatio >= READ_HEAVY_RATIO || r.latencyMs <= TIGHT_LATENCY_MS;
 
 /** Included in every design, whatever the requirements. */
 export const BASELINE: { id: string; reason: string }[] = [
-  { id: "app-servers", reason: "Every design needs somewhere for its logic to run." },
+  {
+    id: "app-servers",
+    reason: "Every design needs somewhere for its logic to run.",
+  },
   {
     id: "metrics-monitoring",
-    reason: "Baseline for any production system: without metrics you can't detect problems or size anything else.",
+    reason:
+      "Baseline for any production system: without metrics you can't detect problems or size anything else.",
   },
   {
     id: "centralized-logging",
-    reason: "Baseline for any production system: without searchable logs you can't debug or audit what happened.",
+    reason:
+      "Baseline for any production system: without searchable logs you can't debug or audit what happened.",
   },
 ];
 
@@ -43,52 +48,63 @@ export const rules: Rule[] = [
   // ---- Functional: what the system does ----------------------------------
   {
     id: "shape-relational",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "relational",
     add: ["relational-database"],
-    reason: "Your records reference each other and you'll query across them, which is what relational databases do best.",
+    reason:
+      "Your records reference each other and you'll query across them, which is what relational databases do best.",
     stage: 0,
     bottleneck: "Every design starts with somewhere to keep the data.",
   },
   {
     id: "shape-key-value",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "key-value",
     add: ["key-value-store"],
-    reason: "Almost every access is by one key, which spreads cleanly across machines.",
+    reason:
+      "Almost every access is by one key, which spreads cleanly across machines.",
     stage: 0,
     bottleneck: "Every design starts with somewhere to keep the data.",
   },
   {
     id: "shape-document",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "document",
     add: ["document-database"],
-    reason: "Your records are nested and read whole, so storing each as one document matches how you use it.",
+    reason:
+      "Your records are nested and read whole, so storing each as one document matches how you use it.",
     stage: 0,
     bottleneck: "Every design starts with somewhere to keep the data.",
   },
   {
     id: "shape-graph",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.dataShape === "graph",
     add: ["graph-database"],
-    reason: "Your key questions follow chains of connections, which a graph walks directly instead of joining repeatedly.",
+    reason:
+      "Your key questions follow chains of connections, which a graph walks directly instead of joining repeatedly.",
     stage: 0,
     bottleneck: "Every design starts with somewhere to keep the data.",
   },
   {
     id: "user-accounts",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.userAccounts,
     add: ["auth-service", "rate-limiter"],
     reason:
       "Users sign in, so you need to verify who they are and what they may do, and to throttle sign-in attempts against password guessing.",
     stage: 1,
-    bottleneck: "Anyone can act as anyone, and bots can try passwords without limit.",
+    bottleneck:
+      "Anyone can act as anyone, and bots can try passwords without limit.",
   },
   {
     id: "media-uploads",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.mediaUploads,
     add: ["object-storage", "cdn"],
@@ -99,74 +115,92 @@ export const rules: Rule[] = [
   },
   {
     id: "full-text-search",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.fullTextSearch,
     add: ["search-index"],
-    reason: "Users search by free text. An inverted index answers ranked text queries that a database can't do well.",
+    reason:
+      "Users search by free text. An inverted index answers ranked text queries that a database can't do well.",
     stage: 3,
-    bottleneck: "Text searches scan whole tables and still return poorly ranked results.",
+    bottleneck:
+      "Text searches scan whole tables and still return poorly ranked results.",
   },
   {
     id: "async-work",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.asyncWork,
     add: ["message-queue"],
-    reason: "Some work can finish after the response. A queue hands it to workers so requests return quickly and nothing is lost.",
+    reason:
+      "Some work can finish after the response. A queue hands it to workers so requests return quickly and nothing is lost.",
     stage: 4,
-    bottleneck: "Requests wait on slow follow-up work the user doesn't need to see finish.",
+    bottleneck:
+      "Requests wait on slow follow-up work the user doesn't need to see finish.",
   },
   {
     id: "realtime-analytics",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.realtimeAnalytics,
     add: ["message-queue", "stream-processing"],
-    reason: "Results must update within seconds of events. Events flow through a durable log into a stream processor that keeps live aggregates.",
+    reason:
+      "Results must update within seconds of events. Events flow through a durable log into a stream processor that keeps live aggregates.",
     stage: 5,
-    bottleneck: "Live numbers computed by querying the database on every view overload it.",
+    bottleneck:
+      "Live numbers computed by querying the database on every view overload it.",
   },
   {
     id: "reporting",
+    basis: "definition",
     driver: "functional",
     when: (r) => r.reporting,
     add: ["etl-pipeline", "data-warehouse"],
-    reason: "The business needs reports across history. A pipeline copies data into a warehouse so big queries never touch live traffic.",
+    reason:
+      "The business needs reports across history. A pipeline copies data into a warehouse so big queries never touch live traffic.",
     stage: 5,
     bottleneck: "Large report queries slow down the database serving users.",
   },
   {
     id: "microservices",
+    basis: "definition",
     driver: "functional",
-    when: (r) => r.microservices,
+    when: (r) => shape(r).level === "microservices",
     add: ["api-gateway", "distributed-tracing"],
     reason:
       "You're splitting into services. A gateway gives clients one front door and handles shared concerns; tracing shows where time goes as a request crosses services.",
     stage: 6,
-    bottleneck: "Teams block each other in one codebase, and cross-service requests are a black box.",
+    bottleneck:
+      "Teams block each other in one codebase, and cross-service requests are a black box.",
   },
   {
     id: "many-services",
+    basis: "rule-of-thumb",
     driver: "functional",
-    when: (r) => r.microservices && r.serviceCount >= DISCOVERY_SERVICE_COUNT,
+    when: (r) => shape(r).level === "microservices" && r.serviceCount >= DISCOVERY_SERVICE_COUNT,
     add: ["service-discovery"],
     reason: (r) =>
       `With ${r.serviceCount} services scaling independently, addresses change constantly; services look each other up by name instead.`,
     stage: 7,
-    bottleneck: "Hard-coded service addresses break every time something scales or moves.",
+    bottleneck:
+      "Hard-coded service addresses break every time something scales or moves.",
   },
   {
     id: "very-many-services",
+    basis: "rule-of-thumb",
     driver: "functional",
-    when: (r) => r.microservices && r.serviceCount >= MESH_SERVICE_COUNT,
+    when: (r) => shape(r).level === "microservices" && r.serviceCount >= MESH_SERVICE_COUNT,
     add: ["service-mesh"],
     reason: (r) =>
       `At ${r.serviceCount} services, re-implementing retries, timeouts and encryption in each one costs more than running a mesh that does it for all of them.`,
     stage: 7,
-    bottleneck: "Every team re-implements retries, timeouts and TLS slightly differently.",
+    bottleneck:
+      "Every team re-implements retries, timeouts and TLS slightly differently.",
   },
 
   // ---- Non-functional: how well it must do it ----------------------------
   {
     id: "consistency-strong",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.consistency === "strong",
     add: (r) => [primaryStore(r)],
@@ -174,71 +208,89 @@ export const rules: Rule[] = [
       r.dataShape === "key-value"
         ? "Every read must see the latest write. You don't need to switch to SQL for that: request strongly consistent reads from the store, at some cost in latency."
         : r.dataShape === "document"
-          ? "Every read must see the latest write. Use majority read and write concerns so reads never return data a failover could roll back."
-          : "Every read must see the latest write, so serve reads from the primary or synchronous replicas, never from lagging copies.",
+        ? "Every read must see the latest write. Use majority read and write concerns so reads never return data a failover could roll back."
+        : "Every read must see the latest write, so serve reads from the primary or synchronous replicas, never from lagging copies.",
     stage: 0,
     bottleneck: "Readers must never see stale values after a write.",
   },
   {
     id: "consistency-mixed",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.consistency === "mixed",
     add: (r) => [primaryStore(r)],
     reason:
       "Only some data must never be stale, like balances or stock counts. Read that data from the primary with strong guarantees, and let everything else come from caches or replicas.",
     stage: 0,
-    bottleneck: "A few values must always be exact, while the rest can lag a little.",
+    bottleneck:
+      "A few values must always be exact, while the rest can lag a little.",
   },
   {
     id: "availability-redundancy",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.availability >= 99.9,
     add: ["load-balancer"],
     reason: (r) =>
-      `A ${r.availability}% target allows only about ${downtimeLabel(r.availability)} of downtime a year, so run at least two servers behind a load balancer that skips a failed one.`,
+      `A ${r.availability}% target allows only about ${downtimeLabel(
+        r.availability
+      )} of downtime a year, so run at least two servers behind a load balancer that skips a failed one.`,
     stage: 1,
     bottleneck: "One server is one failure away from a full outage.",
   },
   {
     id: "availability-standby",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.availability >= 99.99 && r.dataShape !== "key-value",
     add: ["database-replicas"],
     reason: (r) =>
-      `At ${r.availability}% (about ${downtimeLabel(r.availability)} a year) you can't wait to rebuild a failed database. Keep a standby in another zone, ready to be promoted.`,
+      `At ${r.availability}% (about ${downtimeLabel(
+        r.availability
+      )} a year) you can't wait to rebuild a failed database. Keep a standby in another zone, ready to be promoted.`,
     stage: 1,
     bottleneck: "A database failure takes hours to recover from backups.",
   },
   {
     id: "scale-out",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.peakRps > MULTI_SERVER_RPS,
     add: ["load-balancer"],
     reason: (r) =>
-      `Peak traffic of ${r.peakRps.toLocaleString("en-US")} req/s is more than one application server should carry, so you'll spread it over several.`,
+      `Peak traffic of ${r.peakRps.toLocaleString(
+        "en-US"
+      )} req/s is more than one application server should carry, so you'll spread it over several.`,
     stage: 1,
     bottleneck: "The application server's CPU is saturated at peak.",
   },
   {
     id: "read-heavy-cache",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.readWriteRatio >= READ_HEAVY_RATIO,
     add: ["cache"],
-    reason: (r) => `Traffic is read-heavy (${r.readWriteRatio}:1), so most reads repeat recent ones and can be answered from memory.`,
+    reason: (r) =>
+      `Traffic is read-heavy (${r.readWriteRatio}:1), so most reads repeat recent ones and can be answered from memory.`,
     stage: 2,
-    bottleneck: "The database spends most of its time answering the same reads.",
+    bottleneck:
+      "The database spends most of its time answering the same reads.",
   },
   {
     id: "read-heavy-replicas",
+    basis: "rule-of-thumb",
     driver: "non-functional",
-    when: (r) => r.readWriteRatio >= READ_HEAVY_RATIO && r.dataShape !== "key-value",
+    when: (r) =>
+      r.readWriteRatio >= READ_HEAVY_RATIO && r.dataShape !== "key-value",
     add: ["database-replicas"],
-    reason: (r) => `At ${r.readWriteRatio} reads per write, read replicas take the query load that the cache misses off the primary.`,
+    reason: (r) =>
+      `At ${r.readWriteRatio} reads per write, read replicas take the query load that the cache misses off the primary.`,
     stage: 2,
     bottleneck: "Cache misses alone still keep the primary busy.",
   },
   {
     id: "tight-latency",
+    basis: "rule-of-thumb",
     driver: "non-functional",
     when: (r) => r.latencyMs <= TIGHT_LATENCY_MS,
     add: ["cache"],
@@ -249,15 +301,18 @@ export const rules: Rule[] = [
   },
   {
     id: "global-users",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.globalUsers,
     add: ["cdn"],
-    reason: "Your users are worldwide. A CDN answers them from nearby edge servers instead of one distant region.",
+    reason:
+      "Your users are worldwide. A CDN answers them from nearby edge servers instead of one distant region.",
     stage: 3,
     bottleneck: "Users far from your region wait on long network round trips.",
   },
   {
     id: "sensitive-data",
+    basis: "definition",
     driver: "non-functional",
     when: (r) => r.sensitiveData,
     add: ["auth-service"],
@@ -268,10 +323,13 @@ export const rules: Rule[] = [
   },
   {
     id: "write-spikes",
+    basis: "rule-of-thumb",
     driver: "non-functional",
-    when: (r) => r.peakRps > MULTI_SERVER_RPS && r.readWriteRatio <= WRITE_HEAVY_RATIO,
+    when: (r) =>
+      r.peakRps > MULTI_SERVER_RPS && r.readWriteRatio <= WRITE_HEAVY_RATIO,
     add: ["message-queue"],
-    reason: "Heavy write traffic at peak. A queue absorbs the spike so the database can write at a steady pace.",
+    reason:
+      "Heavy write traffic at peak. A queue absorbs the spike so the database can write at a steady pace.",
     stage: 4,
     bottleneck: "Write bursts overload the database.",
   },

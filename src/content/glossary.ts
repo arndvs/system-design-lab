@@ -56,6 +56,11 @@ export const glossary: Record<string, GlossaryEntry> = {
     definition:
       "Online transaction processing serves many small reads and writes for live users; online analytical processing runs few, large queries over lots of history.",
   },
+  outbox: {
+    term: "Outbox",
+    definition:
+      "Writing an event into the same database transaction as the data change, then publishing it from there, so a change and its event cannot disagree.",
+  },
   pacelc: {
     term: "PACELC",
     definition:
@@ -155,6 +160,11 @@ export const glossary: Record<string, GlossaryEntry> = {
   sharding: {
     term: "Sharding",
     definition: "Splitting one data set across several databases by a key, so each holds and serves only part of it.",
+  },
+  saga: {
+    term: "Saga",
+    definition:
+      "A sequence of local transactions across services, where each step has a compensating action that undoes it if a later step fails.",
   },
   "single-point-of-failure": {
     term: "Single point of failure",

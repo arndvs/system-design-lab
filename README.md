@@ -38,6 +38,8 @@ Requirements come in two kinds, and the lab keeps them apart:
 - **Functional requirements**, the features such as sign-in, uploads, search and reports, decide **which components exist**.
 - **Non-functional requirements**, the quality targets such as 99.99% availability, 100 ms at p99 and which data must never be stale, decide **how those components are arranged**: one zone or several regions, cached or not, synchronous or not.
 
+Application shape is a separate decision, derived from your team and operations inputs rather than from a feature switch. The default is a modular monolith. The lab suggests separately deployed services only when ops are solid and there are enough independent teams or uneven scaling needs. Each recommendation states the input that decided it.
+
 Non-functional requirements are targets, not yes/no switches. Choosing 99.99% shows you it allows about 53 minutes of downtime a year, and the design changes to match. When targets pull against each other, such as exact stock counts for worldwide users at 99.99%, the lab names the trade-off (CAP and PACELC) and lists the usual ways out.
 
 ## Rules it gets right
@@ -47,7 +49,7 @@ Plenty of cheat sheets repeat a few shortcuts that don't hold up. The rules here
 - **The database follows the data's shape and access pattern.** Needing strong consistency doesn't force you onto SQL; DynamoDB, for example, offers strongly consistent reads. There's a test for this.
 - **Availability targets have consequences.** 99.9% adds a load balancer even at low traffic; 99.99% adds a standby database in another zone; 99.999% goes multi-region and warns about the cost.
 - **Consistency is set per kind of data.** "Mixed" (exact stock, slightly stale catalog) is often the honest answer, and it avoids a cache-versus-freshness conflict that "strong everywhere" would raise.
-- **Microservices aren't free.** With only a few services, the lab suggests a modular monolith; discovery and a service mesh appear only at 10 and 25 services.
+- **Microservices aren't free.** The lab recommends a modular monolith unless ops are solid and your teams or scaling needs justify separate deployments. Service discovery and a mesh appear only in a microservices design, at 10 and 25 services.
 - **Metrics and logging are always included.** Every production system needs them.
 - **Thresholds are stated, not hidden.** For example, a cache is suggested from 10 reads per write, and the reason names your ratio.
 
@@ -77,6 +79,7 @@ src/
     components/   one file per component, each with sources
     rules.ts      requirement → components, each with a reason and the bottleneck it solves; topology
     tensions.ts   requirement combinations that pull against each other, with resolutions
+    shape.ts      application shape (modular monolith or microservices) from team and ops inputs
     scenarios.ts  practice problems split into functional and non-functional requirements,
                   with reference answers tested against the engine
     glossary.ts
