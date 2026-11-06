@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { componentList, components } from "../src/content/components";
 import { glossary } from "../src/content/glossary";
-import { BASELINE, rules } from "../src/content/rules";
+import { BASELINE, resolveAdd, rules } from "../src/content/rules";
+import { tensions } from "../src/content/tensions";
+import { defaultRequirements } from "../src/engine/recommend";
 import { scenarios } from "../src/content/scenarios";
 
 describe("content", () => {
@@ -34,8 +36,29 @@ describe("content", () => {
   }
 
   it("rules, baseline and scenarios only reference existing components", () => {
-    const referenced = [...rules.flatMap((r) => r.add), ...BASELINE, ...scenarios.flatMap((s) => s.expected)];
+    const shapes = ["relational", "key-value", "document", "graph"] as const;
+    const referenced = [
+      ...rules.flatMap((rule) => shapes.flatMap((dataShape) => resolveAdd(rule, { ...defaultRequirements, dataShape }))),
+      ...BASELINE.map((b) => b.id),
+      ...scenarios.flatMap((s) => s.expected.components),
+    ];
     for (const id of referenced) expect(components, id).toHaveProperty(id);
+  });
+
+  it("tension concepts are glossary terms", () => {
+    for (const t of tensions) for (const key of t.concepts) expect(glossary, `${t.id}: ${key}`).toHaveProperty(key);
+  });
+
+  it("every component is reachable from some requirement", () => {
+    const reachable = new Set([
+      ...BASELINE.map((b) => b.id),
+      ...rules.flatMap((rule) =>
+        (["relational", "key-value", "document", "graph"] as const).flatMap((dataShape) =>
+          resolveAdd(rule, { ...defaultRequirements, dataShape }),
+        ),
+      ),
+    ]);
+    for (const c of componentList) expect(reachable, c.id).toContain(c.id);
   });
 
   it("has unique rule IDs", () => {

@@ -1,4 +1,4 @@
-import { BASELINE, resolveReason, rules } from "../content/rules";
+import { BASELINE, resolveAdd, resolveReason, rules } from "../content/rules";
 import type { Requirements } from "../content/types";
 
 export type Stage = {
@@ -15,21 +15,23 @@ export type Stage = {
  * per bottleneck the requirements will hit, in rule-stage order.
  */
 export function evolve(r: Requirements): Stage[] {
-  const present = new Set<string>(BASELINE);
+  const present = new Set<string>(BASELINE.map((b) => b.id));
   const stages: Stage[] = [];
-  const fired = rules.filter((rule) => rule.when(r)).sort((a, b) => a.stage - b.stage);
+  const fired = rules.filter((rule) => rule.when(r));
 
   const byStage = new Map<number, typeof fired>();
   for (const rule of fired) byStage.set(rule.stage, [...(byStage.get(rule.stage) ?? []), rule]);
 
   for (const [stage, group] of [...byStage.entries()].sort(([a], [b]) => a - b)) {
-    const added = [...new Set(group.flatMap((rule) => rule.add))].filter((id) => !present.has(id));
+    const added = [...new Set(group.flatMap((rule) => resolveAdd(rule, r)))].filter((id) => !present.has(id));
+    // A stage whose components already exist adds nothing new to show.
+    if (stage !== 0 && added.length === 0) continue;
     added.forEach((id) => present.add(id));
     stages.push({
       title: stage === 0 ? "Single server" : `Stage ${stages.length}`,
-      bottleneck: group.map((rule) => rule.bottleneck).join(" "),
+      bottleneck: [...new Set(group.map((rule) => rule.bottleneck))].join(" "),
       added,
-      reasons: group.map((rule) => resolveReason(rule, r)),
+      reasons: [...new Set(group.map((rule) => resolveReason(rule, r)))],
       components: [...present],
     });
   }
