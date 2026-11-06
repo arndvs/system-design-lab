@@ -1,0 +1,23 @@
+{
+  "name": "system-design-lab",
+  "version": "0.1.0",
+  "description": "Interactive system design: pick requirements, see the architecture and the reason behind every component.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:overlap": "node scripts/check-overlap.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  },
+  "private": true,
+  "type": "module"
+}
