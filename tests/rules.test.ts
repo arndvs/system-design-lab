@@ -142,6 +142,13 @@ describe("tensions", () => {
     expect(tensionIds(req({ readWriteRatio: 50, consistency: "mixed" }))).not.toContain("cache-vs-strong-consistency");
   });
 
+  it("flags splitting data across services only when consistency is not eventual", () => {
+    const micro = { opsMaturity: "solid" as const, independentTeams: 3 };
+    expect(tensionIds(req({ ...micro, consistency: "mixed" }))).toContain("split-data-consistency");
+    expect(tensionIds(req({ ...micro, consistency: "eventual" }))).not.toContain("split-data-consistency");
+    expect(tensionIds(req({ consistency: "strong" }))).not.toContain("split-data-consistency");
+  });
+
   it("warns that five nines is expensive", () => {
     expect(tensionIds(req({ availability: 99.999 }))).toContain("five-nines-cost");
   });

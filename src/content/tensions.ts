@@ -78,4 +78,17 @@ export const tensions: Tension[] = [
     ],
     concepts: ["modular-monolith"],
   },
+  {
+    id: "split-data-consistency",
+    when: (r) => shape(r).level === "microservices" && r.consistency !== "eventual",
+    title: "Splitting data across services vs. exact answers",
+    explain:
+      "Each service owns its data, so an operation that must be exact across services can no longer rely on one database transaction. Without a coordinated approach, a failure partway through leaves the services disagreeing.",
+    options: [
+      "Keep the exact operation inside one service that owns all the data it needs.",
+      "Coordinate the steps with a saga, where each step has a compensating action.",
+      "Write the change and its event in one transaction, then publish the event from an outbox.",
+    ],
+    concepts: ["saga", "outbox"],
+  },
 ];
