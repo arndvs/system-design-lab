@@ -15,6 +15,8 @@ export const DISCOVERY_SERVICE_COUNT = 10;
 export const MESH_SERVICE_COUNT = 25;
 /** Below this many services, microservices usually cost more than they return. */
 export const FEW_SERVICES = 5;
+/** Independent teams at which separate deployments start to pay for their overhead. Rule of thumb, not yet sourced. */
+export const SPLIT_TEAM_COUNT = 3;
 
 const primaryStore = (r: Requirements): string =>
   ({

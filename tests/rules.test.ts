@@ -4,7 +4,7 @@ import { BASELINE } from "../src/content/rules";
 import { scenarios } from "../src/content/scenarios";
 import type { Requirements } from "../src/content/types";
 import { evolve } from "../src/engine/evolve";
-import { defaultRequirements, diff, recommend } from "../src/engine/recommend";
+import { defaultRequirements, diff, recommend, shape } from "../src/engine/recommend";
 
 const req = (over: Partial<Requirements> = {}): Requirements => ({ ...defaultRequirements, ...over });
 const ids = (r: Requirements) => Object.keys(recommend(r).components).sort();
@@ -177,6 +177,34 @@ describe("scenarios", () => {
       });
     });
   }
+});
+
+describe("application shape", () => {
+  it("defaults to a modular monolith and says why", () => {
+    const s = shape(req());
+    expect(s.level).toBe("modular-monolith");
+    expect(s.reason).toContain("limited");
+  });
+
+  it("recommends microservices only with solid ops and enough independent teams", () => {
+    expect(shape(req({ opsMaturity: "solid", independentTeams: 3 })).level).toBe("microservices");
+  });
+
+  it("keeps a modular monolith with few teams, even with solid ops", () => {
+    expect(shape(req({ opsMaturity: "solid", independentTeams: 2 })).level).toBe("modular-monolith");
+  });
+
+  it("keeps a modular monolith with limited ops, whatever the team count", () => {
+    expect(shape(req({ opsMaturity: "limited", independentTeams: 10, unevenScaling: true })).level).toBe("modular-monolith");
+  });
+
+  it("splits for uneven scaling with solid ops, even with one team", () => {
+    expect(shape(req({ opsMaturity: "solid", unevenScaling: true })).level).toBe("microservices");
+  });
+
+  it("quotes the team count in the reason", () => {
+    expect(shape(req({ opsMaturity: "solid", independentTeams: 4 })).reason).toContain("4 independent teams");
+  });
 });
 
 describe("evolve", () => {
