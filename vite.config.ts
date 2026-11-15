@@ -1,8 +1,8 @@
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 
-// `base` matches the GitHub Pages path: https://<user>.github.io/system-design-lab/
+// Served from the root of the custom domain, https://whythis.dev (see public/CNAME).
 export default defineConfig({
-  base: "/system-design-lab/",
+  base: "/",
   plugins: [tailwindcss()],
 });

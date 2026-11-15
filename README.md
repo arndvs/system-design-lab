@@ -1,4 +1,6 @@
-<h1 align="center">System Design Lab</h1>
+<h1 align="center">Why This</h1>
+
+<p align="center"><strong>System design, with the reason for every component.</strong></p>
 
 <p align="center">
   <a href="https://github.com/arndvs/system-design-lab/actions/workflows/ci.yml"><img src="https://github.com/arndvs/system-design-lab/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
@@ -8,10 +10,10 @@
 </p>
 
 <p align="center">
-  <a href="https://arndvs.github.io/system-design-lab/"><strong>Open the live site →</strong></a>
+  <a href="https://whythis.dev"><strong>whythis.dev →</strong></a>
 </p>
 
-![System Design Lab: requirements on the left, recommended components with their reasons on the right](docs/screenshot.png)
+![Why This: requirements on the left, recommended components with their reasons on the right](docs/screenshot.png)
 
 ---
 
@@ -19,7 +21,7 @@
 
 A table that maps problems to components is good for review. It's less good at teaching what interviews and real projects test: why a piece belongs in this design, what new problem it creates, and when it's overkill.
 
-System Design Lab makes those links visible. Change one requirement and you see exactly what gets added or dropped, and the reason.
+Why This makes those links visible. Change one requirement and you see exactly what gets added or dropped, and the reason.
 
 ## What's in it
 
@@ -33,12 +35,12 @@ System Design Lab makes those links visible. Change one requirement and you see 
 
 ## How it thinks
 
-Requirements come in two kinds, and the lab keeps them apart:
+Requirements come in two kinds, and Why This keeps them apart:
 
 - **Functional requirements**, the features such as sign-in, uploads, search and reports, decide **which components exist**.
 - **Non-functional requirements**, the quality targets such as 99.99% availability, 100 ms at p99 and which data must never be stale, decide **how those components are arranged**: one zone or several regions, cached or not, synchronous or not.
 
-Non-functional requirements are targets, not yes/no switches. Choosing 99.99% shows you it allows about 53 minutes of downtime a year, and the design changes to match. When targets pull against each other, such as exact stock counts for worldwide users at 99.99%, the lab names the trade-off (CAP and PACELC) and lists the usual ways out.
+Non-functional requirements are targets, not yes/no switches. Choosing 99.99% shows you it allows about 53 minutes of downtime a year, and the design changes to match. When targets pull against each other, such as exact stock counts for worldwide users at 99.99%, it names the trade-off (CAP and PACELC) and lists the usual ways out.
 
 ## Rules it gets right
 
@@ -47,7 +49,7 @@ Plenty of cheat sheets repeat a few shortcuts that don't hold up. The rules here
 - **The database follows the data's shape and access pattern.** Needing strong consistency doesn't force you onto SQL; DynamoDB, for example, offers strongly consistent reads. There's a test for this.
 - **Availability targets have consequences.** 99.9% adds a load balancer even at low traffic; 99.99% adds a standby database in another zone; 99.999% goes multi-region and warns about the cost.
 - **Consistency is set per kind of data.** "Mixed" (exact stock, slightly stale catalog) is often the honest answer, and it avoids a cache-versus-freshness conflict that "strong everywhere" would raise.
-- **Microservices aren't free.** With only a few services, the lab suggests a modular monolith; discovery and a service mesh appear only at 10 and 25 services.
+- **Microservices aren't free.** With only a few services, it suggests a modular monolith; discovery and a service mesh appear only at 10 and 25 services.
 - **Metrics and logging are always included.** Every production system needs them.
 - **Thresholds are stated, not hidden.** For example, a cache is suggested from 10 reads per write, and the reason names your ratio.
 

@@ -1,7 +1,8 @@
 {
-  "name": "system-design-lab",
+  "name": "whythis",
   "version": "0.1.0",
-  "description": "Interactive system design: pick requirements, see the architecture and the reason behind every component.",
+  "description": "Why This: set your requirements, see the architecture they call for and the reason behind every component.",
+  "homepage": "https://whythis.dev",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
