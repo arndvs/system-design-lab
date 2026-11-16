@@ -5,6 +5,7 @@ import { scenarios } from "../src/content/scenarios";
 import type { Requirements } from "../src/content/types";
 import { evolve } from "../src/engine/evolve";
 import { shape } from "../src/content/shape";
+import { MODEL_LATENCY_MS } from "../src/content/tensions";
 import { defaultRequirements, diff, recommend } from "../src/engine/recommend";
 
 const req = (over: Partial<Requirements> = {}): Requirements => ({ ...defaultRequirements, ...over });
@@ -250,6 +251,37 @@ describe("basis", () => {
   it("carries the basis into each reason", () => {
     const reasons = recommend(req({ readWriteRatio: 50 })).components["cache"]!;
     expect(reasons.some((reason) => reason.basis === "rule-of-thumb")).toBe(true);
+  });
+});
+
+describe("language models", () => {
+  const has = (over: Partial<Requirements>, id: string) => Object.keys(recommend(req(over)).components).includes(id);
+
+  it("adds a gateway and an evaluation suite to any design that calls a model", () => {
+    for (const over of [{ languageModel: true }, { documentAnswers: true }]) {
+      expect(has(over, "model-gateway")).toBe(true);
+      expect(has(over, "llm-evals")).toBe(true);
+    }
+    expect(has({}, "model-gateway")).toBe(false);
+    expect(has({}, "llm-evals")).toBe(false);
+  });
+
+  it("adds a vector store only when answers come from your documents", () => {
+    expect(has({ documentAnswers: true }, "vector-store")).toBe(true);
+    expect(has({ languageModel: true }, "vector-store")).toBe(false);
+  });
+
+  it("adds model serving only when a model is used and self-hosted", () => {
+    expect(has({ languageModel: true, selfHostedModel: true }, "model-serving")).toBe(true);
+    expect(has({ selfHostedModel: true }, "model-serving")).toBe(false);
+    expect(has({ languageModel: true }, "model-serving")).toBe(false);
+  });
+
+  it("flags a latency target too tight for a full model answer", () => {
+    const ids = (over: Partial<Requirements>) => recommend(req(over)).tensions.map((t) => t.id);
+    expect(ids({ languageModel: true, latencyMs: MODEL_LATENCY_MS - 1 })).toContain("model-vs-latency");
+    expect(ids({ languageModel: true, latencyMs: MODEL_LATENCY_MS })).not.toContain("model-vs-latency");
+    expect(ids({ latencyMs: 100 })).not.toContain("model-vs-latency");
   });
 });
 

@@ -11,6 +11,9 @@ const functionalSwitches: { key: BoolKey; label: string; hint: string }[] = [
   { key: "asyncWork", label: "Background work", hint: "Emails, fan-out, processing after the response" },
   { key: "realtimeAnalytics", label: "Live analytics", hint: "Counts or alerts within seconds of events" },
   { key: "reporting", label: "Reports over history", hint: "Business reporting across months of data" },
+  { key: "languageModel", label: "Uses a language model", hint: "Generates, summarizes or classifies text" },
+  { key: "documentAnswers", label: "Answers from your documents", hint: "Grounds answers in your own content" },
+  { key: "selfHostedModel", label: "Runs its own model", hint: "On your GPUs, not a provider's API" },
 ];
 
 const nonFunctionalSwitches: { key: BoolKey; label: string; hint: string }[] = [

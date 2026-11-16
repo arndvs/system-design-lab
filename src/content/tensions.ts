@@ -1,7 +1,10 @@
 import { downtimeLabel } from "./availability";
-import { needsCache, TIGHT_LATENCY_MS } from "./rules";
+import { needsCache, TIGHT_LATENCY_MS, usesModel } from "./rules";
 import { shape, SPLIT_TEAM_COUNT } from "./shape";
 import type { Tension } from "./types";
+
+/** Below this p99 target, a full model answer will usually not fit. Rule of thumb. */
+export const MODEL_LATENCY_MS = 1000;
 
 /** Combinations of requirements that pull against each other. */
 export const tensions: Tension[] = [
@@ -90,5 +93,19 @@ export const tensions: Tension[] = [
       "Write the change and its event in one transaction, then publish the event from an outbox.",
     ],
     concepts: ["saga", "outbox"],
+  },
+  {
+    id: "model-vs-latency",
+    when: (r) => usesModel(r) && r.latencyMs < MODEL_LATENCY_MS,
+    title: "A language model inside a tight latency budget",
+    explain: (r) =>
+      `Your p99 target is ${r.latencyMs} ms for the whole response. A model writes its answer one token at a time, so a full answer often takes seconds, and longer answers take longer.`,
+    options: [
+      "Stream the answer, and set the target on the time to the first words rather than the last.",
+      "Take generation off the request: respond at once and deliver the answer when it is ready.",
+      "Use a smaller, faster model on this path, and check with the evaluation set that quality holds.",
+      "Cache answers to questions that repeat.",
+    ],
+    concepts: ["token", "time-to-first-token"],
   },
 ];

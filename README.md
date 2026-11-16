@@ -51,6 +51,7 @@ Plenty of cheat sheets repeat a few shortcuts that don't hold up. The rules here
 - **Consistency is set per kind of data.** "Mixed" (exact stock, slightly stale catalog) is often the honest answer, and it avoids a cache-versus-freshness conflict that "strong everywhere" would raise.
 - **Microservices aren't free.** The lab recommends a modular monolith unless ops are solid and your teams or scaling needs justify separate deployments. Service discovery and a mesh appear only in a microservices design, at 10 and 25 services.
 - **Metrics and logging are always included.** Every production system needs them.
+- **A language model brings a gateway and an evaluation suite with it.** Answers from your own documents add a vector store; running the model yourself adds model serving. A latency target under 1 second for a full model answer is flagged as a trade-off.
 - **Thresholds are stated, not hidden.** For example, a cache is suggested from 10 reads per write, and the reason names your ratio.
 
 Disagree with a rule? [Open an issue](https://github.com/arndvs/system-design-lab/issues) and include a source.

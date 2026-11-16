@@ -190,4 +190,36 @@ export const glossary: Record<string, GlossaryEntry> = {
     term: "TTL",
     definition: "Time to live: how long a cached copy may be served before it must be refreshed.",
   },
+  embedding: {
+    term: "Embedding",
+    definition:
+      "A list of numbers a model produces for a piece of text, placed so that texts with similar meaning end up close together.",
+  },
+  "retrieval-augmented-generation": {
+    term: "Retrieval-augmented generation (RAG)",
+    definition:
+      "Finding the passages relevant to a question first, then giving them to a language model so it answers from them rather than from memory.",
+  },
+  "approximate-nearest-neighbor": {
+    term: "Approximate nearest neighbor (ANN)",
+    definition:
+      "Search that finds vectors very close to a query without comparing against every one, accepting that it occasionally misses the closest.",
+  },
+  token: {
+    term: "Token",
+    definition:
+      "The unit a language model reads and writes, usually a word or part of a word. Providers charge per token, and generation time grows with the number of tokens produced.",
+  },
+  "time-to-first-token": {
+    term: "Time to first token",
+    definition: "How long a user waits before a streamed answer starts to appear, as opposed to waiting for the whole answer.",
+  },
+  "llm-as-judge": {
+    term: "Model-graded evaluation",
+    definition: "Using a language model with a written rubric to grade another model's answers when no exact answer exists.",
+  },
+  "golden-set": {
+    term: "Golden set",
+    definition: "A fixed collection of inputs with agreed good answers, used to score every change the same way.",
+  },
 };

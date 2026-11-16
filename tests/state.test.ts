@@ -15,6 +15,12 @@ describe("URL state round trip", () => {
     expect(fromHash(`#${toHash(r)}`)).toEqual(r);
   });
 
+  it("round-trips the language model switches", () => {
+    const r = { ...defaultRequirements, languageModel: true, documentAnswers: true, selfHostedModel: true };
+    expect(toHash(r)).toBe("llm=1&docs=1&selfhost=1");
+    expect(fromHash(`#${toHash(r)}`)).toEqual(r);
+  });
+
   it("encodes nothing for the defaults", () => {
     expect(toHash(defaultRequirements)).toBe("");
   });
