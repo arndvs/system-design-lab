@@ -25,9 +25,9 @@ System Design Lab makes those links visible. Change one requirement and you see 
 
 | Section | Status | What you do there |
 |---|---|---|
-| **Build** | Live | Describe the **features** and data shape, then set **quality targets** (availability, response time and consistency as real targets). You get the components, where they should run, and the trade-offs your requirements force. Every component is tagged with which side of the requirements pulled it in. Your settings live in the URL, so you can share a design. |
+| **Build** | Live | Describe the **features** and data shape, then set **quality targets** (availability, response time and consistency as real targets). You get the design drawn by layer along the request path, the components, where they should run, and the trade-offs your requirements force. Every component is tagged with which side of the requirements pulled it in. Your settings live in the URL, so you can share a design. |
 | **Evolve** | Live | Replay your design from a single server, one stage at a time. Each stage shows what hurts, what you add, and why, with the design so far drawn by layer. The stage is part of the link. |
-| **Estimate** | Engine done | Throughput and storage calculators that show every step of the math with your numbers. |
+| **Estimate** | Live | Traffic and storage calculators that show every step of the math with your numbers. One button carries the peak into Build. |
 | **Learn** | Planned | Browse every component by layer, with glossary and sourced latency figures. |
 | **Practice** | Planned | Work through scenarios such as a URL shortener or a checkout flow, then compare your design with the reference answer. |
 
@@ -87,9 +87,9 @@ src/
     recommend.ts  pure function: requirements → { component: reasons[] }
     evolve.ts     the design as a series of stages, each split into pain → components → reason
     estimate.ts   back-of-the-envelope math that returns its working
-  ui/             requirements panel, results and the Evolve view
-  main.ts         wires the Build and Evolve views together
-  state.ts        URL hash ↔ requirements
+  ui/             requirements panel, results, the layer diagram, and the Evolve and Estimate views
+  main.ts         wires the views together
+  state.ts        URL hash ↔ requirements, view, stage and estimate inputs
 tests/
 ```
 

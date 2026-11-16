@@ -1,6 +1,7 @@
 import { components } from "../content/components";
 import type { Driver, Layer, Topology } from "../content/types";
 import { diff, type Recommendation } from "../engine/recommend";
+import { layerDiagram } from "./diagram";
 import { esc, term } from "./html";
 
 const layerText: Record<Layer, string> = {
@@ -41,6 +42,7 @@ export type ResultsEls = {
   summary: HTMLElement;
   shape: HTMLElement;
   topology: HTMLElement;
+  diagram: HTMLElement;
   tensions: HTMLElement;
   changes: HTMLElement;
   list: HTMLElement;
@@ -78,6 +80,11 @@ export function renderResults(els: ResultsEls, rec: Recommendation, previous: Re
     : "";
 
   const { added, removed } = previous ? diff(previous, rec) : { added: [], removed: [] };
+  els.diagram.innerHTML = `
+    <p class="text-xs font-medium text-muted">The design by layer</p>
+    <p class="mt-1 mb-4 text-sm text-muted">A request passes down the layers. Choose a part to see why it is here.</p>
+    ${layerDiagram(ids, { fresh: added, interactive: true })}`;
+
   els.changes.innerHTML = [
     ...added.map((id) => `<li class="text-emerald-300">+ ${esc(components[id]!.name)}: ${esc(rec.components[id]![0]!.text)}</li>`),
     ...removed.map((id) => `<li class="text-muted">− ${esc(components[id]!.name)}: no longer needed</li>`),
@@ -88,7 +95,7 @@ export function renderResults(els: ResultsEls, rec: Recommendation, previous: Re
       const c = components[id]!;
       const isNew = added.includes(id);
       return `
-      <li class="rounded-xl border ${isNew ? "border-emerald-500/50" : "border-line"} bg-panel p-4">
+      <li id="card-${esc(id)}" tabindex="-1" class="scroll-mt-6 rounded-xl border ${isNew ? "border-emerald-500/50" : "border-line"} bg-panel p-4">
         <p class="text-xs font-medium capitalize ${layerText[c.layer]}">${c.layer}</p>
         <h3 class="mt-1 font-semibold">${esc(c.name)}</h3>
         <p class="mt-1 text-sm text-muted">${esc(c.oneLiner)}</p>
