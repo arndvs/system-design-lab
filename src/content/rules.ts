@@ -15,6 +15,21 @@ export const TIGHT_LATENCY_MS = 50;
 export const DISCOVERY_SERVICE_COUNT = 10;
 export const MESH_SERVICE_COUNT = 25;
 
+/**
+ * What each growth stage is about, shown on the Evolve view. Keys are rule
+ * `stage` numbers: every stage a rule uses needs a name here (there is a test).
+ */
+export const STAGE_NAMES: Record<number, string> = {
+  0: "Single server",
+  1: "Stay up and stay safe",
+  2: "Take load off the database",
+  3: "Search and distance",
+  4: "Work after the response",
+  5: "Analytics",
+  6: "Split into services",
+  7: "Many services",
+};
+
 const primaryStore = (r: Requirements): string =>
   ({
     relational: "relational-database",
