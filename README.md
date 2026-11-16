@@ -77,6 +77,7 @@ Vite, TypeScript with no framework, Tailwind CSS v4, and Vitest. All teaching co
 src/
   content/
     components/   one file per component, each with sources
+    failures.ts   what breaks when each component fails, the usual fix, and what limits the damage
     rules.ts      requirement → components, each with a reason and the bottleneck it solves; topology
     tensions.ts   requirement combinations that pull against each other, with resolutions
     shape.ts      application shape (modular monolith or microservices) from team and ops inputs
@@ -89,6 +90,7 @@ src/
     estimate.ts   back-of-the-envelope math that returns its working
     practice.ts   grades an attempt against a scenario and builds its drill cards
     learn.ts      search, and where each component comes from
+    failure.ts    a component's failure read against the rest of a design
   ui/             requirements panel, results, the layer diagram, and the Evolve and Estimate views
   main.ts         wires the views together
   state.ts        URL hash ↔ requirements, view, stage and estimate inputs

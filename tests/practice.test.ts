@@ -41,11 +41,11 @@ describe("grade", () => {
 });
 
 describe("drills", () => {
-  it("gives four answered questions for every part of every reference design", () => {
+  it("gives five answered questions for every part of every reference design", () => {
     for (const s of scenarios) {
       for (const id of s.expected.components) {
         const cards = drills(s, id);
-        expect(cards).toHaveLength(4);
+        expect(cards).toHaveLength(5);
         for (const card of cards) {
           expect(card.answer.length, `${s.id}: ${id}: ${card.question}`).toBeGreaterThan(0);
           for (const line of card.answer) expect(line).toBeTruthy();
