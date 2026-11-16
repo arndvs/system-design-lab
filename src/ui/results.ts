@@ -26,7 +26,7 @@ const driverStyle: Record<Driver, string> = {
   baseline: "bg-zinc-500/10 text-zinc-300 ring-zinc-500/30",
 };
 
-const topologyLabel: Record<Topology, string> = {
+export const topologyLabel: Record<Topology, string> = {
   "single-server": "Single server",
   "single-zone": "One zone, redundant servers",
   "multi-zone": "Several zones",

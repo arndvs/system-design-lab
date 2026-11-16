@@ -29,7 +29,7 @@ System Design Lab makes those links visible. Change one requirement and you see 
 | **Evolve** | Live | Replay your design from a single server, one stage at a time. Each stage shows what hurts, what you add, and why, with the design so far drawn by layer. The stage is part of the link. |
 | **Estimate** | Live | Traffic and storage calculators that show every step of the math with your numbers. One button carries the peak into Build. |
 | **Learn** | Planned | Browse every component by layer, with glossary and sourced latency figures. |
-| **Practice** | Planned | Work through scenarios such as a URL shortener or a checkout flow, then compare your design with the reference answer. |
+| **Practice** | Live | Read a brief, sort its requirements, pick the components and where they run, then check against the reference answer. You see what you missed and why, what you added that the brief does not call for, and drill cards with interview questions for every part. |
 
 ## How it thinks
 
@@ -87,6 +87,7 @@ src/
     recommend.ts  pure function: requirements → { component: reasons[] }
     evolve.ts     the design as a series of stages, each split into pain → components → reason
     estimate.ts   back-of-the-envelope math that returns its working
+    practice.ts   grades an attempt against a scenario and builds its drill cards
   ui/             requirements panel, results, the layer diagram, and the Evolve and Estimate views
   main.ts         wires the views together
   state.ts        URL hash ↔ requirements, view, stage and estimate inputs
