@@ -1,6 +1,7 @@
 import { components } from "../content/components";
 import type { Driver, Layer, Topology } from "../content/types";
 import { diff, type Recommendation } from "../engine/recommend";
+import { failureIn } from "../engine/failure";
 import { layerDiagram } from "./diagram";
 import { esc, term } from "./html";
 
@@ -37,6 +38,18 @@ const ruleOfThumbTag = `<span class="shrink-0 rounded px-1.5 py-0.5 text-[11px] 
 
 const chip = (driver: Driver) =>
   `<span class="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${driverStyle[driver]}">${driverLabel[driver]}</span>`;
+
+/** What happens when this part fails, read against the rest of the design. */
+function failureBlock(id: string, ids: string[]): string {
+  const f = failureIn(id, ids);
+  const name = (x: string) => esc(components[x]!.name);
+  return `
+    <p class="mt-3 text-xs font-medium text-rose-300">If it fails</p>
+    <p class="mt-1 text-ink">${esc(f.breaks)}</p>
+    <p class="mt-1 text-muted">Usual fix: ${esc(f.contain)}</p>
+    ${f.helping.length ? `<p class="mt-2 text-xs font-medium text-emerald-300">In your design</p><ul class="mt-1 space-y-1">${f.helping.map((h) => `<li><span class="text-ink">${name(h.id)}:</span> <span class="text-muted">${esc(h.how)}</span></li>`).join("")}</ul>` : ""}
+    ${f.missing.length ? `<p class="mt-2 text-xs font-medium text-muted">Would help, not in your design</p><ul class="mt-1 space-y-1">${f.missing.map((h) => `<li><span class="text-ink">${name(h.id)}:</span> <span class="text-muted">${esc(h.how)}</span></li>`).join("")}</ul>` : ""}`;
+}
 
 export type ResultsEls = {
   summary: HTMLElement;
@@ -104,10 +117,11 @@ export function renderResults(els: ResultsEls, rec: Recommendation, previous: Re
           .map((r) => `<li class="flex items-start gap-2">${chip(r.driver)}${r.basis === "rule-of-thumb" ? ruleOfThumbTag : ""}<span>${esc(r.text)}</span></li>`)
           .join("")}</ul>
         <details class="mt-3 text-sm">
-          <summary class="cursor-pointer text-accent">Trade-offs and when to skip it</summary>
+          <summary class="cursor-pointer text-accent">Trade-offs, failure and when to skip it</summary>
           <ul class="mt-2 space-y-2">${c.tradeoffs
             .map((t) => `<li><span class="text-ink">${esc(t.cost)}</span><br /><span class="text-muted">Fix: ${esc(t.mitigation)}</span></li>`)
             .join("")}</ul>
+          ${failureBlock(id, ids)}
           <p class="mt-3 text-xs font-medium text-muted">Skip it when</p>
           <ul class="mt-1 list-disc space-y-1 pl-5 text-muted">${c.skipWhen.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
           <p class="mt-3 text-xs font-medium text-muted">Interview angle</p>

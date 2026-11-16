@@ -1,4 +1,5 @@
 import { components } from "../content/components";
+import { failures } from "../content/failures";
 import { glossary } from "../content/glossary";
 import { shapeEntries } from "../content/shape-entries";
 import type { Source } from "../content/types";
@@ -42,6 +43,13 @@ function componentEntry(id: string, open: boolean): string {
           ${label("Add it when")}${list(c.addWhen)}
           ${label("Skip it when")}${list(c.skipWhen)}
           ${label("What it costs, and the usual fix")}${tradeoffs(c.tradeoffs)}
+          ${label("If it fails")}<p class="mt-1 text-ink">${esc(failures[id]!.breaks)}</p><p class="mt-1">Usual fix: ${esc(failures[id]!.contain)}</p>${
+            failures[id]!.helpedBy.length
+              ? `<p class="mt-2">What limits the damage, if the design has it:</p><ul class="mt-1 space-y-1">${failures[id]!.helpedBy
+                  .map((h) => `<li>${pill(`data-open-entry="${esc(h.id)}"`, components[h.id]!.name)} <span>${esc(h.how)}</span></li>`)
+                  .join("")}</ul>`
+              : ""
+          }
           ${label("Interview angle")}<p class="mt-1">${esc(c.interviewAngle)}</p>
           ${label("Tools")}<p class="mt-1 flex flex-wrap gap-1.5">${c.tools
             .map((t) => `<span class="rounded bg-raised px-2 py-0.5 font-mono text-xs">${esc(t.name)} <span class="text-faint">${t.kind}</span></span>`)

@@ -1,6 +1,7 @@
 import { components } from "../content/components";
 import type { Scenario } from "../content/scenarios";
 import type { Topology } from "../content/types";
+import { failureIn } from "./failure";
 import { recommend } from "./recommend";
 
 export type Attempt = { components: string[]; topology: Topology | null };
@@ -60,6 +61,7 @@ export type Drill = { question: string; answer: string[] };
 export function drills(scenario: Scenario, id: string): Drill[] {
   const c = components[id]!;
   const reasons = recommend(scenario.requirements).components[id]?.map((r) => r.text) ?? [];
+  const f = failureIn(id, scenario.expected.components);
   return [
     { question: "Why is it in this design?", answer: reasons },
     {
@@ -67,6 +69,14 @@ export function drills(scenario: Scenario, id: string): Drill[] {
       answer: c.tradeoffs.map((t) => `${t.cost} Usual fix: ${t.mitigation}`),
     },
     { question: "When would you leave it out?", answer: c.skipWhen },
+    {
+      question: "What happens when it fails?",
+      answer: [
+        f.breaks,
+        `Usual fix: ${f.contain}`,
+        ...f.helping.map((h) => `In this design, ${components[h.id]!.name} helps: ${h.how}`),
+      ],
+    },
     { question: "What is the interviewer likely to push on?", answer: [c.interviewAngle] },
   ];
 }
