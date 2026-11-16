@@ -72,3 +72,52 @@ export function fromHash(hash: string): Requirements {
   }
   return r as Requirements;
 }
+
+/** Inputs to the Estimate view. Reads per write is shared with the requirements. */
+export type EstimateInputs = {
+  dailyActiveUsers: number;
+  requestsPerUserPerDay: number;
+  peakFactor: number;
+  bytesPerRecord: number;
+  newRecordsPerDay: number;
+  retentionYears: number;
+  copies: number;
+};
+
+export const defaultEstimate: EstimateInputs = {
+  dailyActiveUsers: 1_000_000,
+  requestsPerUserPerDay: 20,
+  peakFactor: 3,
+  bytesPerRecord: 1_000,
+  newRecordsPerDay: 1_000_000,
+  retentionYears: 5,
+  copies: 3,
+};
+
+const ESTIMATE_KEYS: Record<keyof EstimateInputs, string> = {
+  dailyActiveUsers: "dau",
+  requestsPerUserPerDay: "rpu",
+  peakFactor: "peak",
+  bytesPerRecord: "bytes",
+  newRecordsPerDay: "records",
+  retentionYears: "years",
+  copies: "copies",
+};
+
+/** Reads estimate inputs from a hash, using the default for anything missing or not a positive number. */
+export function estimateFromHash(hash: string): EstimateInputs {
+  const p = new URLSearchParams(hash.replace(/^#/, ""));
+  const out = { ...defaultEstimate };
+  for (const [field, key] of Object.entries(ESTIMATE_KEYS) as [keyof EstimateInputs, string][]) {
+    const n = Number(p.get(key));
+    if (p.has(key) && Number.isFinite(n) && n > 0) out[field] = n;
+  }
+  return out;
+}
+
+/** Hash entries for the estimate inputs that differ from the defaults. */
+export function estimateToParams(e: EstimateInputs): [string, string][] {
+  return (Object.entries(ESTIMATE_KEYS) as [keyof EstimateInputs, string][])
+    .filter(([field]) => e[field] !== defaultEstimate[field])
+    .map(([field, key]) => [key, String(e[field])]);
+}

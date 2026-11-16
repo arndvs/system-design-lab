@@ -1,42 +1,8 @@
-import { components } from "../content/components";
 import { BASELINE } from "../content/rules";
-import type { Layer, Topology } from "../content/types";
+import type { Topology } from "../content/types";
 import type { Stage } from "../engine/evolve";
+import { componentNames as names, layerDiagram } from "./diagram";
 import { esc } from "./html";
-
-/** Layers in the order a request meets them, then the ones that sit beside the path. */
-const LAYERS: { id: Layer; label: string; text: string; ring: string }[] = [
-  { id: "edge", label: "Edge", text: "text-layer-edge", ring: "ring-layer-edge" },
-  { id: "entry", label: "Entry", text: "text-layer-entry", ring: "ring-layer-entry" },
-  { id: "compute", label: "Compute", text: "text-layer-compute", ring: "ring-layer-compute" },
-  { id: "data", label: "Data", text: "text-layer-data", ring: "ring-layer-data" },
-  { id: "async", label: "Async", text: "text-layer-async", ring: "ring-layer-async" },
-  { id: "analytics", label: "Analytics", text: "text-layer-analytics", ring: "ring-layer-analytics" },
-  { id: "ops", label: "Operations", text: "text-layer-ops", ring: "ring-layer-ops" },
-];
-
-const names = (ids: string[]) => ids.map((id) => components[id]!.name).join(", ");
-
-/** The design at one stage, as rows of boxes by layer. New boxes are outlined. */
-function diagram(stage: Stage): string {
-  const fresh = new Set(stage.added);
-  const rows = LAYERS.map((layer) => {
-    const ids = stage.components.filter((id) => components[id]!.layer === layer.id);
-    if (ids.length === 0) return "";
-    return `
-      <div class="grid grid-cols-[5.5rem_1fr] items-start gap-3">
-        <p class="pt-1.5 text-xs font-medium ${layer.text}">${layer.label}</p>
-        <ul class="flex flex-wrap gap-2">${ids
-          .map((id) =>
-            fresh.has(id)
-              ? `<li class="rounded-lg bg-raised px-2.5 py-1.5 text-sm font-medium ring-2 ring-inset ${layer.ring}">${esc(components[id]!.name)}<span class="sr-only"> (new)</span></li>`
-              : `<li class="rounded-lg border border-line px-2.5 py-1.5 text-sm text-muted">${esc(components[id]!.name)}</li>`,
-          )
-          .join("")}</ul>
-      </div>`;
-  }).join("");
-  return `<div class="space-y-3" role="img" aria-label="Design after this stage: ${esc(names(stage.components))}">${rows}</div>`;
-}
 
 export type EvolveEls = { summary: HTMLElement; root: HTMLElement };
 
@@ -93,7 +59,7 @@ export function renderEvolve(
         <h2 class="font-semibold">${esc(stage.title)}</h2>
         <p class="text-xs text-muted">${stage.added.length} new</p>
       </div>
-      ${diagram(stage)}
+      ${layerDiagram(stage.components, { fresh: stage.added })}
       ${baseline}
     </div>
 

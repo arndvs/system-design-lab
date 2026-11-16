@@ -14,8 +14,8 @@
         <nav aria-label="Sections" class="-mx-3 flex gap-1 overflow-x-auto text-sm sm:mx-0">
           <button type="button" data-view="build" aria-current="page" class="rounded-md px-3 py-1.5 text-muted aria-[current=page]:bg-raised aria-[current=page]:text-ink">Build</button>
           <button type="button" data-view="evolve" class="rounded-md px-3 py-1.5 text-muted aria-[current=page]:bg-raised aria-[current=page]:text-ink">Evolve</button>
+          <button type="button" data-view="estimate" class="rounded-md px-3 py-1.5 text-muted aria-[current=page]:bg-raised aria-[current=page]:text-ink">Estimate</button>
           <span class="px-3 py-1.5 text-faint" title="Coming soon">Learn</span>
-          <span class="px-3 py-1.5 text-faint" title="Coming soon">Estimate</span>
           <span class="px-3 py-1.5 text-faint" title="Coming soon">Practice</span>
         </nav>
       </div>
@@ -30,6 +30,7 @@
         </div>
         <div id="shape" class="mb-4 rounded-xl border border-line bg-panel p-4"></div>
         <div id="topology" class="mb-4 rounded-xl border border-line bg-panel p-4"></div>
+        <div id="diagram" class="mb-4 rounded-xl border border-line bg-panel p-4"></div>
         <div id="tensions" class="mb-4 space-y-3 empty:hidden"></div>
         <ol id="changes" class="mb-4 space-y-1 text-sm empty:hidden" aria-live="polite"></ol>
         <h2 class="sr-only">Components</h2>
@@ -44,6 +45,13 @@
           <p id="evolve-summary" class="text-sm whitespace-nowrap text-muted" aria-live="polite"></p>
         </div>
         <div id="evolve"></div>
+      </section>
+      <section id="view-estimate" aria-labelledby="estimate-heading" class="min-w-0 lg:col-span-2" hidden>
+        <div class="mb-4">
+          <h1 id="estimate-heading" class="text-lg font-semibold">Back-of-the-envelope numbers</h1>
+          <p class="mt-1 text-sm text-muted">Put numbers on the load before you draw anything. Every step of the math is shown with your figures.</p>
+        </div>
+        <div id="estimate"></div>
       </section>
     </main>
 
