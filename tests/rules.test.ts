@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { downtimeLabel } from "../src/content/availability";
-import { BASELINE, rules } from "../src/content/rules";
+import { BASELINE, STAGE_NAMES, rules } from "../src/content/rules";
 import { scenarios } from "../src/content/scenarios";
 import type { Requirements } from "../src/content/types";
 import { evolve } from "../src/engine/evolve";
@@ -260,6 +260,28 @@ describe("evolve", () => {
       expect(stages[0]?.title).toBe("Single server");
       expect(stages.at(-1)?.components.sort()).toEqual(ids(s.requirements));
     }
+  });
+
+  it("names every stage a rule can fire in", () => {
+    for (const rule of rules) expect(STAGE_NAMES[rule.stage], `stage ${rule.stage} (${rule.id})`).toBeTruthy();
+  });
+
+  it("splits each stage into steps that account for everything it adds", () => {
+    for (const s of scenarios) {
+      for (const stage of evolve(s.requirements)) {
+        expect(stage.steps.flatMap((step) => step.added)).toEqual(stage.added);
+        for (const step of stage.steps) {
+          expect(step.added.length).toBeGreaterThan(0);
+          expect(step.bottleneck).toBeTruthy();
+          expect(step.reason).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  it("uses the stage name as the title", () => {
+    const stages = evolve(req({ userAccounts: true, readWriteRatio: 50 }));
+    expect(stages.map((st) => st.title)).toEqual(["Single server", "Stay up and stay safe", "Take load off the database"]);
   });
 
   it("never adds the same component in two stages", () => {
