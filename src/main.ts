@@ -6,13 +6,14 @@ import { recommend } from "./engine/recommend";
 import { estimateFromHash, estimateToParams, fromHash, toHash } from "./state";
 import { readEstimate, renderEstimate, renderEstimateResults } from "./ui/estimate";
 import { renderEvolve, type EvolveEls } from "./ui/evolve";
+import { renderLearn, renderLearnResults, revealEntry } from "./ui/learn";
 import { clearGrade, readAttempt, renderGrade, renderPractice } from "./ui/practice";
 import { readRequirements, renderRequirements } from "./ui/requirements";
 import { renderResults, type ResultsEls } from "./ui/results";
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 
-const VIEWS = ["build", "evolve", "estimate", "practice"] as const;
+const VIEWS = ["build", "evolve", "estimate", "practice", "learn"] as const;
 type View = (typeof VIEWS)[number];
 const asView = (v: string | null | undefined): View => VIEWS.find((name) => name === v) ?? "build";
 
@@ -29,11 +30,13 @@ const els: ResultsEls = {
 const evolveEls: EvolveEls = { summary: $("#evolve-summary"), root: $("#evolve") };
 const estimateRoot = $("#estimate");
 const practiceRoot = $("#practice");
+const learnRoot = $("#learn");
 const sections: Record<View, HTMLElement> = {
   build: $("#view-build"),
   evolve: $("#view-evolve"),
   estimate: $("#view-estimate"),
   practice: $("#view-practice"),
+  learn: $("#view-learn"),
 };
 const tabs = [...document.querySelectorAll<HTMLButtonElement>("[data-view]")];
 
@@ -45,6 +48,8 @@ let view = asView(params.get("view"));
 let stageIndex = Math.max(0, Number(params.get("stage") ?? 1) - 1) || 0;
 let estimate = estimateFromHash(location.hash);
 let scenario = scenarios.find((s) => s.id === params.get("scenario")) ?? scenarios[0]!;
+let learnQuery = "";
+let learnEntry: string | null = params.get("entry");
 
 let current = fromHash(location.hash);
 let currentRec = recommend(current);
@@ -55,6 +60,7 @@ function writeHash() {
   if (view !== "build") p.set("view", view);
   if (view === "evolve" && stageIndex > 0) p.set("stage", String(stageIndex + 1));
   if (view === "practice" && scenario !== scenarios[0]) p.set("scenario", scenario.id);
+  if (view === "learn" && learnEntry) p.set("entry", learnEntry);
   for (const [key, value] of estimateToParams(estimate)) p.set(key, value);
   history.replaceState(null, "", `#${p.toString()}`);
 }
@@ -66,8 +72,8 @@ function showEvolve() {
 
 function showView() {
   for (const [name, el] of Object.entries(sections)) el.hidden = name !== view;
-  // Estimate and Practice have their own inputs and use the full width.
-  form.hidden = view === "estimate" || view === "practice";
+  // Only Build and Evolve are driven by the requirements form; the rest use the full width.
+  form.hidden = view !== "build" && view !== "evolve";
   for (const tab of tabs) {
     if (tab.dataset.view === view) tab.setAttribute("aria-current", "page");
     else tab.removeAttribute("aria-current");
@@ -75,6 +81,7 @@ function showView() {
   if (view === "evolve") showEvolve();
   if (view === "estimate") renderEstimate(estimateRoot, estimate, current.readWriteRatio);
   if (view === "practice") renderPractice(practiceRoot, scenario);
+  if (view === "learn") renderLearn(learnRoot, learnQuery, learnEntry);
 }
 
 /** Applies new requirements to every view that shows them. */
@@ -98,6 +105,7 @@ function setView(next: View) {
 renderRequirements(form, current);
 renderResults(els, currentRec, null);
 showView();
+if (view === "learn" && learnEntry) revealEntry(learnRoot, learnEntry);
 
 form.addEventListener("input", () => {
   applyRequirements(readRequirements(form, current));
@@ -165,3 +173,58 @@ practiceRoot.addEventListener("submit", (e) => {
   renderGrade(practiceRoot, scenario, grade(scenario, readAttempt(practiceRoot)));
 });
 practiceRoot.addEventListener("reset", () => clearGrade(practiceRoot));
+
+/** Shows one component's entry in Learn, clearing any search that would hide it. */
+function openInLearn(id: string) {
+  learnQuery = "";
+  learnEntry = id;
+  setView("learn");
+  revealEntry(learnRoot, id);
+}
+
+// A Build card links to its full entry.
+els.list.addEventListener("click", (e) => {
+  const id = (e.target as HTMLElement).closest<HTMLElement>("[data-learn]")?.dataset.learn;
+  if (id) openInLearn(id);
+});
+
+learnRoot.addEventListener("input", (e) => {
+  const input = e.target as HTMLInputElement;
+  if (input.name !== "q") return;
+  learnQuery = input.value;
+  renderLearnResults(learnRoot, learnQuery, learnEntry);
+});
+
+learnRoot.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+  const entry = target.closest<HTMLElement>("[data-open-entry]")?.dataset.openEntry;
+  if (entry) {
+    // A related component may be filtered out by the current search.
+    if (!learnRoot.querySelector(`#entry-${CSS.escape(entry)}`)) {
+      openInLearn(entry);
+      return;
+    }
+    learnEntry = entry;
+    revealEntry(learnRoot, entry);
+    writeHash();
+    return;
+  }
+  const id = target.closest<HTMLElement>("[data-open-scenario]")?.dataset.openScenario;
+  if (id) {
+    scenario = scenarios.find((s) => s.id === id) ?? scenario;
+    setView("practice");
+  }
+});
+
+// Remember the last entry opened, so the link points at it.
+learnRoot.addEventListener(
+  "toggle",
+  (e) => {
+    const details = e.target as HTMLDetailsElement;
+    if (!details.dataset?.entry) return;
+    if (details.open) learnEntry = details.dataset.entry;
+    else if (learnEntry === details.dataset.entry) learnEntry = null;
+    writeHash();
+  },
+  true,
+);

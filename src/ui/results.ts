@@ -119,6 +119,7 @@ export function renderResults(els: ResultsEls, rec: Recommendation, previous: Re
           <p class="mt-3 text-xs text-muted">Sources: ${c.sources
             .map((s) => `<a class="text-accent underline-offset-2 hover:underline" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`)
             .join(" · ")}</p>
+          <button type="button" data-learn="${esc(id)}" class="mt-3 text-sm text-accent underline-offset-2 hover:underline">Open the full entry in Learn</button>
         </details>
       </li>`;
     })
