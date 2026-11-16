@@ -28,7 +28,7 @@ System Design Lab makes those links visible. Change one requirement and you see 
 | **Build** | Live | Describe the **features** and data shape, then set **quality targets** (availability, response time and consistency as real targets). You get the design drawn by layer along the request path, the components, where they should run, and the trade-offs your requirements force. Every component is tagged with which side of the requirements pulled it in. Your settings live in the URL, so you can share a design. |
 | **Evolve** | Live | Replay your design from a single server, one stage at a time. Each stage shows what hurts, what you add, and why, with the design so far drawn by layer. The stage is part of the link. |
 | **Estimate** | Live | Traffic and storage calculators that show every step of the math with your numbers. One button carries the peak into Build. |
-| **Learn** | Planned | Browse every component by layer, with glossary and sourced latency figures. |
+| **Learn** | Live | Browse every component by layer with its full entry, what brings it into a design and the scenarios that use it; the three application shapes; and the glossary. One search box covers all three. |
 | **Practice** | Live | Read a brief, sort its requirements, pick the components and where they run, then check against the reference answer. You see what you missed and why, what you added that the brief does not call for, and drill cards with interview questions for every part. |
 
 ## How it thinks
@@ -88,6 +88,7 @@ src/
     evolve.ts     the design as a series of stages, each split into pain → components → reason
     estimate.ts   back-of-the-envelope math that returns its working
     practice.ts   grades an attempt against a scenario and builds its drill cards
+    learn.ts      search, and where each component comes from
   ui/             requirements panel, results, the layer diagram, and the Evolve and Estimate views
   main.ts         wires the views together
   state.ts        URL hash ↔ requirements, view, stage and estimate inputs
