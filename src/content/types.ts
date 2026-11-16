@@ -57,6 +57,12 @@ export type Requirements = {
   asyncWork: boolean;
   realtimeAnalytics: boolean;
   reporting: boolean;
+  /** Calls a language model to generate, summarize or classify text. */
+  languageModel: boolean;
+  /** Answers questions from the product's own documents. Implies a language model. */
+  documentAnswers: boolean;
+  /** Runs the model on its own infrastructure instead of a provider's API. */
+  selfHostedModel: boolean;
   /** Only meaningful when the application shape is microservices. */
   serviceCount: number;
   /** Teams that deploy on their own schedule. Decides application shape. */

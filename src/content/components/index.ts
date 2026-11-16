@@ -12,9 +12,12 @@ import { documentDatabase } from "./document-database";
 import { etlPipeline } from "./etl-pipeline";
 import { graphDatabase } from "./graph-database";
 import { keyValueStore } from "./key-value-store";
+import { llmEvals } from "./llm-evals";
 import { loadBalancer } from "./load-balancer";
 import { messageQueue } from "./message-queue";
 import { metricsMonitoring } from "./metrics-monitoring";
+import { modelGateway } from "./model-gateway";
+import { modelServing } from "./model-serving";
 import { objectStorage } from "./object-storage";
 import { rateLimiter } from "./rate-limiter";
 import { relationalDatabase } from "./relational-database";
@@ -22,6 +25,7 @@ import { searchIndex } from "./search-index";
 import { serviceDiscovery } from "./service-discovery";
 import { serviceMesh } from "./service-mesh";
 import { streamProcessing } from "./stream-processing";
+import { vectorStore } from "./vector-store";
 
 /** Ordered roughly along a request's path, which is also the display order. */
 const all: Component[] = [
@@ -36,6 +40,8 @@ const all: Component[] = [
   appServers,
   serviceDiscovery,
   serviceMesh,
+  modelGateway,
+  modelServing,
   // data
   cache,
   relationalDatabase,
@@ -44,6 +50,7 @@ const all: Component[] = [
   graphDatabase,
   databaseReplicas,
   searchIndex,
+  vectorStore,
   objectStorage,
   // async
   messageQueue,
@@ -55,6 +62,7 @@ const all: Component[] = [
   metricsMonitoring,
   centralizedLogging,
   distributedTracing,
+  llmEvals,
 ];
 
 export const components: Record<string, Component> = Object.fromEntries(all.map((c) => [c.id, c]));

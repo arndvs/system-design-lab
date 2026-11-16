@@ -24,6 +24,7 @@ export const STAGE_NAMES: Record<number, string> = {
   1: "Stay up and stay safe",
   2: "Take load off the database",
   3: "Search and distance",
+  3.5: "Language models",
   4: "Work after the response",
   5: "Analytics",
   6: "Split into services",
@@ -37,6 +38,9 @@ const primaryStore = (r: Requirements): string =>
     document: "document-database",
     graph: "graph-database",
   }[r.dataShape]);
+
+/** True when any feature calls a language model. */
+export const usesModel = (r: Requirements) => r.languageModel || r.documentAnswers;
 
 export const needsCache = (r: Requirements) =>
   r.readWriteRatio >= READ_HEAVY_RATIO || r.latencyMs <= TIGHT_LATENCY_MS;
@@ -127,6 +131,50 @@ export const rules: Rule[] = [
       "Users upload and view images or video. Files go to object storage, uploaded directly with signed URLs, and reach viewers through a CDN.",
     stage: 2,
     bottleneck: "Large files clog the database and the app servers' bandwidth.",
+  },
+  {
+    id: "model-gateway",
+    basis: "definition",
+    driver: "functional",
+    when: usesModel,
+    add: ["model-gateway"],
+    reason:
+      "The product calls a language model. Routing every call through one gateway gives you retries, fallback to another provider during an outage, and tokens and cost per caller.",
+    stage: 3.5,
+    bottleneck: "One provider's outage or rate limit takes the feature down, and nobody can see what each call costs.",
+  },
+  {
+    id: "llm-evals",
+    basis: "definition",
+    driver: "functional",
+    when: usesModel,
+    add: ["llm-evals"],
+    reason:
+      "Model output can't be checked with ordinary unit tests. A fixed set of real inputs with known good answers shows whether a prompt or model change made answers better or worse.",
+    stage: 3.5,
+    bottleneck: "A prompt or model change quietly makes answers worse, and nothing catches it.",
+  },
+  {
+    id: "document-answers",
+    basis: "definition",
+    driver: "functional",
+    when: (r) => r.documentAnswers,
+    add: ["vector-store"],
+    reason:
+      "Answers must come from your own documents. Passages are embedded and stored in a vector store; each question retrieves the closest ones, and the model answers from them.",
+    stage: 3.5,
+    bottleneck: "The model answers from what it learned in training, not from your documents, and invents details when it doesn't know.",
+  },
+  {
+    id: "self-hosted-model",
+    basis: "definition",
+    driver: "functional",
+    when: (r) => usesModel(r) && r.selfHostedModel,
+    add: ["model-serving"],
+    reason:
+      "You run the model yourself, so you need GPU servers and a serving engine that batches requests to keep them busy.",
+    stage: 3.5,
+    bottleneck: "Sending requests to a provider is ruled out, so the model has to run somewhere you control.",
   },
   {
     id: "full-text-search",

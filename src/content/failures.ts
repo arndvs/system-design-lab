@@ -180,4 +180,27 @@ export const failures: Record<string, Failure> = {
     contain: "Run it redundantly across zones, keep it thin, and keep business logic out of it.",
     helpedBy: [{ id: "cdn", how: "Files and pages already cached at the edge keep loading." }],
   },
+  "vector-store": {
+    breaks:
+      "Questions can no longer find the passages they need. The model either refuses or answers without your documents, which is when it is most likely to invent details.",
+    contain:
+      "Refuse rather than answer ungrounded, run the store replicated, and keep the source documents so the index can be rebuilt.",
+    helpedBy: [{ id: "search-index", how: "Keyword search can still find passages while vector search is down." }],
+  },
+  "model-gateway": {
+    breaks: "Every feature that calls a model fails at once, even though the providers behind it are healthy.",
+    contain: "Run several stateless copies behind a load balancer, and keep the gateway's own logic small.",
+    helpedBy: [{ id: "load-balancer", how: "It stops sending calls to a gateway copy that has failed." }],
+  },
+  "model-serving": {
+    breaks:
+      "Requests to your own model fail or queue. New GPU servers can take minutes to start, so capacity does not come back quickly.",
+    contain: "Keep spare capacity warm, and route to a provider's model as a fallback while your servers recover.",
+    helpedBy: [{ id: "model-gateway", how: "It can fall back to a provider's model while your servers are down." }],
+  },
+  "llm-evals": {
+    breaks: "The product keeps working, but prompt and model changes ship without a quality check.",
+    contain: "Block releases that change prompts or models until the suite runs again.",
+    helpedBy: [],
+  },
 };
