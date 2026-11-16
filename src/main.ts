@@ -1,15 +1,18 @@
 import "./styles.css";
+import { scenarios } from "./content/scenarios";
 import { evolve } from "./engine/evolve";
+import { grade } from "./engine/practice";
 import { recommend } from "./engine/recommend";
 import { estimateFromHash, estimateToParams, fromHash, toHash } from "./state";
 import { readEstimate, renderEstimate, renderEstimateResults } from "./ui/estimate";
 import { renderEvolve, type EvolveEls } from "./ui/evolve";
+import { clearGrade, readAttempt, renderGrade, renderPractice } from "./ui/practice";
 import { readRequirements, renderRequirements } from "./ui/requirements";
 import { renderResults, type ResultsEls } from "./ui/results";
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 
-const VIEWS = ["build", "evolve", "estimate"] as const;
+const VIEWS = ["build", "evolve", "estimate", "practice"] as const;
 type View = (typeof VIEWS)[number];
 const asView = (v: string | null | undefined): View => VIEWS.find((name) => name === v) ?? "build";
 
@@ -25,10 +28,12 @@ const els: ResultsEls = {
 };
 const evolveEls: EvolveEls = { summary: $("#evolve-summary"), root: $("#evolve") };
 const estimateRoot = $("#estimate");
+const practiceRoot = $("#practice");
 const sections: Record<View, HTMLElement> = {
   build: $("#view-build"),
   evolve: $("#view-evolve"),
   estimate: $("#view-estimate"),
+  practice: $("#view-practice"),
 };
 const tabs = [...document.querySelectorAll<HTMLButtonElement>("[data-view]")];
 
@@ -39,6 +44,7 @@ const params = new URLSearchParams(location.hash.replace(/^#/, ""));
 let view = asView(params.get("view"));
 let stageIndex = Math.max(0, Number(params.get("stage") ?? 1) - 1) || 0;
 let estimate = estimateFromHash(location.hash);
+let scenario = scenarios.find((s) => s.id === params.get("scenario")) ?? scenarios[0]!;
 
 let current = fromHash(location.hash);
 let currentRec = recommend(current);
@@ -48,6 +54,7 @@ function writeHash() {
   const p = new URLSearchParams(toHash(current));
   if (view !== "build") p.set("view", view);
   if (view === "evolve" && stageIndex > 0) p.set("stage", String(stageIndex + 1));
+  if (view === "practice" && scenario !== scenarios[0]) p.set("scenario", scenario.id);
   for (const [key, value] of estimateToParams(estimate)) p.set(key, value);
   history.replaceState(null, "", `#${p.toString()}`);
 }
@@ -59,14 +66,15 @@ function showEvolve() {
 
 function showView() {
   for (const [name, el] of Object.entries(sections)) el.hidden = name !== view;
-  // The estimate has its own inputs and uses the full width.
-  form.hidden = view === "estimate";
+  // Estimate and Practice have their own inputs and use the full width.
+  form.hidden = view === "estimate" || view === "practice";
   for (const tab of tabs) {
     if (tab.dataset.view === view) tab.setAttribute("aria-current", "page");
     else tab.removeAttribute("aria-current");
   }
   if (view === "evolve") showEvolve();
   if (view === "estimate") renderEstimate(estimateRoot, estimate, current.readWriteRatio);
+  if (view === "practice") renderPractice(practiceRoot, scenario);
 }
 
 /** Applies new requirements to every view that shows them. */
@@ -135,3 +143,25 @@ estimateRoot.addEventListener("click", (e) => {
   renderRequirements(form, current);
   setView("build");
 });
+
+practiceRoot.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+  const id = target.closest<HTMLElement>("[data-scenario]")?.dataset.scenario;
+  if (id) {
+    scenario = scenarios.find((s) => s.id === id) ?? scenario;
+    renderPractice(practiceRoot, scenario);
+    writeHash();
+    return;
+  }
+  // The reference design, loaded into the requirements so Build and Evolve show it.
+  if (target.closest("[data-open-build]")) {
+    applyRequirements({ ...scenario.requirements });
+    renderRequirements(form, current);
+    setView("build");
+  }
+});
+practiceRoot.addEventListener("submit", (e) => {
+  e.preventDefault();
+  renderGrade(practiceRoot, scenario, grade(scenario, readAttempt(practiceRoot)));
+});
+practiceRoot.addEventListener("reset", () => clearGrade(practiceRoot));
